@@ -1,0 +1,36 @@
+
+name: Extract THE LAST VILLAGE Phase 1
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract ZIP
+        run: |
+          mkdir -p extracted
+          unzip -o THE_LAST_VILLAGE_Phase1_r2_UNTESTED.zip -d extracted
+
+      - name: Move project files to root
+        run: |
+          shopt -s dotglob
+          cp -a extracted/. .
+          rm -rf extracted
+          rm -f THE_LAST_VILLAGE_Phase1_r2_UNTESTED.zip
+
+      - name: Commit extracted files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Extract THE LAST VILLAGE Phase 1"
+          git push
