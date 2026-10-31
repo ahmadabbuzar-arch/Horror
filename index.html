@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="hi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Horror House – First Person</title>
+<style>
+:root{--bg:#05070d;--fg:#e8e6df;--ac:#d9822b;--pn:rgba(10,12,20,.82);color-scheme:dark;box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+#ov{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(3,4,8,.88);z-index:20;padding:env(safe-area-inset-top,0px) 16px env(safe-area-inset-bottom,0px)}
+.card{max-width:420px;text-align:center;line-height:1.5}
+h1{margin:0 0 6px;font-size:26px;letter-spacing:.5px}
+.sm{font-size:13px;opacity:.75}
+button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:10px 16px}
+#go{margin:16px 0 10px;background:var(--ac);color:#150b02;border:0;font-weight:700;font-size:18px;padding:12px 28px}
+#go:disabled{opacity:.5}
+#hud{flex-wrap:wrap;justify-content:flex-end;max-width:100%;position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;display:none;gap:8px;z-index:10}
+#cross{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:rgba(255,255,255,.55);display:none;z-index:5;pointer-events:none}
+#pad,#look{position:fixed;top:0;bottom:0;z-index:6;display:none}
+#pad{left:0;width:45%}#look{right:0;width:55%}
+.j{position:fixed;width:110px;height:110px;margin:-55px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);display:none;z-index:7;pointer-events:none}
+.j i{position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.35)}
+#dr{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 64px);z-index:10;background:var(--ac);color:#150b02;border:0;font-weight:700;font-size:17px;padding:12px 22px}
+#msg{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);text-align:center;font-size:13px;opacity:.7;z-index:8;pointer-events:none}
+</style></head><body>
+<canvas id="c"></canvas><div id="cross"></div>
+<div id="pad"></div><div id="look"></div><div class="j" id="jb"><i id="jk"></i></div>
+<div id="hud"><button id="bv">🏘️ Gaon</button><button id="bh">🏠 Hut ke andar</button><button id="bw">👻 Hut deewar: OFF</button><button id="bl">🔦</button></div>
+<button id="dr" style="display:none"></button><div id="msg"></div>
+<div id="ov"><div class="card"><h1>🏚️ Horror House</h1>
+<div class="sm" id="st">Scene load ho raha hai…</div>
+<button id="go" disabled>▶ Khelo</button>
+<div class="sm">PC: WASD chalo · Mouse dekho · Shift daudo · F torch · H hut · G gaon · E door kholo/band karo<br>Mobile: left side joystick · right side swipe se dekho</div>
+<div class="sm" style="margin-top:10px;opacity:.5">v8 · Phase 1 r2 (characters + car) — UNTESTED BUILD · Hut: “Horror House Scene” by CGS CREATOR (Sketchfab, CC-BY-4.0)</div>
+<div class="sm" style="margin-top:6px;opacity:.45;font-size:10px;line-height:1.35">Models (Sketchfab): Mechanic – 00amza · Old Lady – silran666 · Guard – DJMaesen · Dark Psychic Kid – sebasxpm · Man – Mcyborg · Abandoned Sedan – Rashad Ibrahimli (all CC-BY-4.0) · Horror Girl – LostBoyz2078 (CC-BY-NC-4.0, non-commercial) · Doctor – Innerscene Corp (CC0)</div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<!-- offline fallback: put three.min.js (r128) and GLTFLoader.js (r128) into vendor/ -->
+<script>window.THREE||document.write('<script src="vendor/three.min.js"><\/script>')</script>
+<script>(window.THREE&&THREE.GLTFLoader)||document.write('<script src="vendor/GLTFLoader.js"><\/script>')</script>
+<script src="js/p1-core.js"></script>
+<script src="js/p1-config.js"></script>
+<script src="js/p1-characters.js"></script>
+<script src="js/p1-car.js"></script>
+<script src="js/p1-main.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+const renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:false});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputEncoding=THREE.sRGBEncoding;
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x06080f);scene.fog=new THREE.FogExp2(0x080b14,0.028);
+const cam=new THREE.PerspectiveCamera(72,1,0.05,220);cam.rotation.order='YXZ';scene.add(cam);
+scene.add(new THREE.HemisphereLight(0x5a6fa8,0x2a2118,0.95));
+const moon=new THREE.DirectionalLight(0x9fb2ff,0.7);moon.position.set(-20,40,10);scene.add(moon);
+const torch=new THREE.SpotLight(0xfff0c8,2.2,32,0.5,0.55,1);torch.position.set(0.1,-0.1,0);torch.target.position.set(0,0,-1);cam.add(torch,torch.target);
+const lamp=new THREE.PointLight(0xffa24a,1.4,12);scene.add(lamp);
+function resize(){renderer.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
+addEventListener('resize',resize);resize();
+
+let doors=[],nearDoor=null,rootRef=null,vmesh=[],nearV=[],cabinMeshes=[],trees=[],cc=new THREE.Vector3(),ready=false,started=false;
+const pos=new THREE.Vector3(),rc=new THREE.Raycaster();let gy=0,yaw=0,pitch=0,bob=0;
+const keys={},joy={x:0,y:0},DOWN=new THREE.Vector3(0,-1,0);
+
+function build(gltf){
+  const root=gltf.scene;rootRef=root;scene.add(root);
+  root.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.side=THREE.DoubleSide;if(m.transparent){m.transparent=false;m.alphaTest=0.35}if(m.map)m.map.anisotropy=4})});
+  const cabin=root.getObjectByName('Cabin8_5');
+  if(cabin){ // hut ko insaan ke size ka bana do (original bahut chhota tha)
+    const b=new THREE.Box3().setFromObject(cabin),c=b.getCenter(new THREE.Vector3());
+    const pv=new THREE.Group();pv.position.set(c.x,b.min.y,c.z);scene.add(pv);pv.updateMatrixWorld(true);
+    pv.attach(cabin);pv.scale.setScalar(3.6);pv.updateMatrixWorld(true);
+    cabin.traverse(o=>{if(o.isMesh)cabinMeshes.push(o)});
+    new THREE.Box3().setFromObject(cabin).getCenter(cc);
+  }
+  [...root.children].forEach(g=>{
+    if(g===cabin||!g.children.length)return;
+    const b=new THREE.Box3().setFromObject(g),sz=b.getSize(new THREE.Vector3());
+    if(sz.y<6||sz.x>60)return; // sirf ped
+    let tr=null;g.traverse(o=>{if(o.isMesh&&!tr)tr=o});
+    const tb=new THREE.Box3().setFromObject(tr),tc=tb.getCenter(new THREE.Vector3()),ts=tb.getSize(new THREE.Vector3());
+    if(Math.hypot(tc.x-cc.x,tc.z-cc.z)<13.5){root.remove(g);return} // hut ke aas-paas ki jagah saaf
+    trees.push({g,x:tc.x,z:tc.z,r:Math.max(0.5,0.12*(ts.x+ts.z))});
+  });
+  pos.set(cc.x,0,cc.z+14);yaw=0;lamp.position.set(cc.x,2.4,cc.z);
+}
+function hit(o,d,far,ms){rc.set(o,d);rc.far=far;return rc.intersectObjects(ms,false).length>0}
+function loadVillage(done){
+  try{
+    $('st').textContent='Gaon load ho raha hai…';
+    new THREE.GLTFLoader().load('assets/models/village.glb',vg=>{try{placeVillage(vg)}catch(e){console.error(e);$('msg').textContent='Village error: '+e.message}done()},undefined,e=>{console.error(e);$('st').textContent='Village load error (assets/models/village.glb)';done()});
+  }catch(e){console.error(e);done()}
+}
+let villageBox=null; // world-space bounds of the village (used by NPC spawn anchors)
+function placeVillage(vg){
+  const S=vg.scene;
+  S.traverse(o=>{if(o.isMesh)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.side=THREE.DoubleSide;if(m.transparent){m.transparent=false;m.alphaTest=0.35}})});
+  const g=new THREE.Group(),b0=new THREE.Box3().setFromObject(S);g.add(S);
+  g.position.set(cc.x+8-(b0.min.x+b0.max.x)/2,0,cc.z+24-b0.min.z);scene.add(g);g.updateMatrixWorld(true);
+  const V3=THREE.Vector3,gp=g.position;
+  // NOTE: loader children ka order random hota hai, isliye cheezein shape/size se pehchanti hoon (index se nahi)
+  const info=[];S.traverse(o=>{if(!o.isMesh)return;const bb=new THREE.Box3().setFromObject(o),mm=Array.isArray(o.material)?o.material[0]:o.material;
+    info.push({o,b:bb,s:bb.getSize(new V3()),c:bb.getCenter(new V3()).sub(gp),mat:(mm&&mm.name)||''})});
+  // bahar padi loose cheezein hata do (cactus rakhe hain)
+  info.forEach(i=>{if(i.c.x>2.9&&i.mat!=='Cactus'&&!/^Text/.test(i.o.name)&&i.o.parent)i.o.parent.remove(i.o)});
+  // darwaze: patle (~4 cm), ~1.5 m ooncha, 0.7-1.2 m chaude patte
+  const leaves=info.filter(i=>i.c.x<2.9&&i.s.y>1.45&&i.s.y<1.65&&Math.min(i.s.x,i.s.z)<0.08&&Math.max(i.s.x,i.s.z)>0.7&&Math.max(i.s.x,i.s.z)<1.2&&i.b.min.y<0.4);
+  const groups=[];leaves.forEach(l=>{const gr=groups.find(q=>q.some(k=>Math.hypot(k.c.x-l.c.x,k.c.z-l.c.z)<1.6));if(gr)gr.push(l);else groups.push([l])});
+  groups.sort((x,y)=>x[0].c.z-y[0].c.z);
+  groups.forEach(gr=>{
+    const ms=gr.map(i=>i.o),bs=gr.map(i=>i.b),u=new THREE.Box3();bs.forEach(b=>u.union(b));
+    const cen=u.getCenter(new V3()),door={cur:0,t:0,x:cen.x,z:cen.z,piv:[]};
+    ms.forEach((m,k)=>{
+      const b=bs[k],sz=b.getSize(new V3()),c=b.getCenter(new V3()),xt=sz.x<sz.z;
+      let hx=xt?c.x:b.min.x,hz=xt?b.min.z:c.z;
+      if(ms.length>1){if(xt)hz=c.z<cen.z?b.min.z:b.max.z;else hx=c.x<cen.x?b.min.x:b.max.x}
+      const e=(xt?Math.sign(c.z-hz):Math.sign(c.x-hx))||1,pv=new THREE.Group();
+      pv.position.set(hx-g.position.x,0,hz-g.position.z);g.add(pv);g.updateMatrixWorld(true);pv.attach(m);pv.userData.th=(xt?e:-e)*1.5;door.piv.push(pv);
+    });
+    doors.push(door);
+  });
+  g.traverse(o=>{if(o.isMesh){o.userData.box=new THREE.Box3().setFromObject(o).expandByScalar(2.5);vmesh.push(o)}});
+  villageBox=new THREE.Box3().setFromObject(g);
+  const vb=new THREE.Box3().setFromObject(g).expandByScalar(7);
+  for(let k=trees.length-1;k>=0;k--){const t=trees[k];if(t.x>vb.min.x&&t.x<vb.max.x&&t.z>vb.min.z&&t.z<vb.max.z){rootRef.remove(t.g);trees.splice(k,1)}}
+}
+function step(dx,dz){
+  const L=Math.hypot(dx,dz);if(L<1e-6)return;const d=new THREE.Vector3(dx/L,0,dz/L);
+  for(const h of[0.7,1.3]){const o=new THREE.Vector3(pos.x,gy+h,pos.z);if((wallsOn&&hit(o,d,L+0.35,cabinMeshes))||(nearV.length&&hit(o,d,L+0.35,nearV)))return}
+  pos.x+=dx;pos.z+=dz;
+}
+function goVillage(){const d=doors[0];if(!d)return;pos.set(d.x+2.2,0,d.z);gy=0;yaw=Math.PI/2;pitch=0}
+function toggleDoor(){if(nearDoor){nearDoor.t=nearDoor.t?0:1;showDoor(true)}}
+function showDoor(force){
+  let nd=null,bd=3.6;for(const d of doors){const q=Math.hypot(pos.x-d.x,pos.z-d.z);if(q<bd){bd=q;nd=d}}
+  if(nd!==nearDoor||force){nearDoor=nd;const b=$('dr');b.style.display=nd?'block':'none';if(nd)b.textContent=nd.t?'🚪 Door band karo (E)':'🚪 Door kholo (E)'}
+}
+function update(dt){
+  showDoor(false);for(const d of doors){d.cur+=(d.t-d.cur)*Math.min(1,dt*5);for(const pv of d.piv)pv.rotation.y=d.cur*pv.userData.th}
+  const pp=new THREE.Vector3(pos.x,gy+1,pos.z);nearV=vmesh.filter(o=>o.userData.box.containsPoint(pp));
+  let f=(keys.w?1:0)-(keys.s?1:0)-joy.y,s=(keys.d?1:0)-(keys.a?1:0)+joy.x;
+  const n=Math.hypot(f,s);if(n>1){f/=n;s/=n}
+  const sp=keys.shift?5.6:3.3,sn=Math.sin(yaw),cs=Math.cos(yaw);
+  step((-sn*f+cs*s)*sp*dt,0);step(0,(-cs*f-sn*s)*sp*dt);
+  for(const t of trees){const dx=pos.x-t.x,dz=pos.z-t.z,d=Math.hypot(dx,dz),m=t.r+0.35;if(d<m&&d>1e-4){pos.x=t.x+dx/d*m;pos.z=t.z+dz/d*m}}
+  if(window.P1&&P1.collide)P1.collide(pos);
+  pos.x=Math.max(-150,Math.min(150,pos.x));pos.z=Math.max(-150,Math.min(150,pos.z));
+  let tg=0;
+  const gm=cabinMeshes.concat(nearV);if(gm.length){rc.set(new THREE.Vector3(pos.x,gy+0.8,pos.z),DOWN);rc.far=2.5;const h=rc.intersectObjects(gm,false)[0];if(h&&h.point.y>-0.2)tg=Math.max(0,h.point.y)}
+  gy+=(tg-gy)*Math.min(1,dt*12);
+  bob+=Math.min(1,n)*sp*dt*2.4;
+  cam.position.set(pos.x,gy+1.5+Math.sin(bob)*0.035*Math.min(1,n),pos.z);
+  cam.rotation.set(pitch,yaw,0);
+  lamp.intensity=1.2+Math.sin(performance.now()*0.011)*0.25+Math.random()*0.25;
+  if(window.P1&&P1.update)P1.update(dt,pos);
+}
+let last=performance.now();
+(function loop(t){requestAnimationFrame(loop);if(!ready)return;const dt=Math.min(0.05,(t-last)/1000);last=t;if(started)update(dt);renderer.render(scene,cam)})(0);
+
+function goHut(){if(!cabinMeshes.length)return;pos.set(cc.x,0,cc.z);gy=0;$('msg').textContent='Hut ke andar ho. Bahar nikalne ke liye darwaza dhoondo 🚪';setTimeout(()=>$('msg').textContent='',5000)}
+let wallsOn=false;function toggleWalls(){wallsOn=!wallsOn;$('bw').textContent=wallsOn?'🧱 Hut deewar: ON':'👻 Hut deewar: OFF'}
+function toggleTorch(){torch.visible=!torch.visible}
+$('dr').onclick=toggleDoor;$('bv').onclick=goVillage;$('bh').onclick=goHut;$('bl').onclick=toggleTorch;$('bw').onclick=toggleWalls;
+addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='shift')keys.shift=true;else keys[k]=true;if(k==='f')toggleTorch();if(k==='h')goHut();if(k==='g')goVillage();if(k==='e')toggleDoor()});
+addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='shift')keys.shift=false;else keys[k]=false});
+
+// mouse look (pointer lock, fallback = drag)
+let drag=false,wasLocked=false;
+$('c').addEventListener('mousedown',()=>{drag=true});addEventListener('mouseup',()=>{drag=false});
+addEventListener('mousemove',e=>{if(!started)return;if(document.pointerLockElement||drag){yaw-=e.movementX*0.0024;pitch=Math.max(-1.45,Math.min(1.45,pitch-e.movementY*0.0024))}});
+document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement)wasLocked=true;else if(wasLocked&&started){wasLocked=false;started=false;$('go').textContent='▶ Wapas khelo';$('ov').style.display='flex'}});
+
+// touch controls
+if(touch){
+  const pad=$('pad'),look=$('look'),jb=$('jb'),jk=$('jk');let jid=null,jo=null,lid=null,lp=null;
+  const T=(e,fn)=>{e.preventDefault();for(const t of e.changedTouches)fn(t)};
+  pad.addEventListener('touchstart',e=>T(e,t=>{if(jid!==null)return;jid=t.identifier;jo={x:t.clientX,y:t.clientY};jb.style.cssText='display:block;left:'+jo.x+'px;top:'+jo.y+'px'}),{passive:false});
+  pad.addEventListener('touchmove',e=>T(e,t=>{if(t.identifier!==jid)return;let dx=t.clientX-jo.x,dy=t.clientY-jo.y;const d=Math.hypot(dx,dy),m=50;if(d>m){dx*=m/d;dy*=m/d}joy.x=dx/m;joy.y=dy/m;jk.style.transform='translate('+dx+'px,'+dy+'px)'}),{passive:false});
+  const je=e=>T(e,t=>{if(t.identifier!==jid)return;jid=null;joy.x=joy.y=0;jb.style.display='none';jk.style.transform=''});
+  pad.addEventListener('touchend',je,{passive:false});pad.addEventListener('touchcancel',je,{passive:false});
+  look.addEventListener('touchstart',e=>T(e,t=>{if(lid!==null)return;lid=t.identifier;lp={x:t.clientX,y:t.clientY}}),{passive:false});
+  look.addEventListener('touchmove',e=>T(e,t=>{if(t.identifier!==lid)return;yaw-=(t.clientX-lp.x)*0.006;pitch=Math.max(-1.45,Math.min(1.45,pitch-(t.clientY-lp.y)*0.006));lp={x:t.clientX,y:t.clientY}}),{passive:false});
+  const le=e=>T(e,t=>{if(t.identifier===lid)lid=null});
+  look.addEventListener('touchend',le,{passive:false});look.addEventListener('touchcancel',le,{passive:false});
+}
+$('go').onclick=()=>{
+  $('ov').style.display='none';started=true;$('hud').style.display='flex';$('cross').style.display='block';
+  if(touch){$('pad').style.display='block';$('look').style.display='block'}
+  else{try{$('c').requestPointerLock()}catch(e){}}
+};
+// load
+function p1Ground(x,z){ // floor height under (x,z): same downward ray the player uses, village meshes only
+  const p=new THREE.Vector3(x,0.8,z),ms=vmesh.filter(o=>o.userData.box.containsPoint(p));if(!ms.length)return 0;
+  rc.set(p,DOWN);rc.far=2.5;const h=rc.intersectObjects(ms,false)[0];return h&&h.point.y>-0.2?Math.max(0,h.point.y):0}
+function p1Clear(x,z,r){ // true if nothing solid within r metres at knee/chest height
+  const p=new THREE.Vector3(x,1,z),ms=vmesh.filter(o=>o.userData.box.containsPoint(p));if(!ms.length)return true;
+  for(const h of[0.5,1.3])for(let k=0;k<8;k++){const a=k/8*6.2832;rc.set(new THREE.Vector3(x,h,z),new THREE.Vector3(Math.cos(a),0,Math.sin(a)));rc.far=r;if(rc.intersectObjects(ms,false).length)return false}
+  return true}
+function p1Start(){try{if(window.P1&&P1.start)P1.start({scene,cam,pos,cc,doors,spawn:{x:pos.x,z:pos.z},villageBox:()=>villageBox,notify:t=>{const m=$('msg');if(m)m.textContent=t},addDoor:d=>doors.push(d),ground:p1Ground,clear:p1Clear})}catch(e){console.error('[P1] start failed',e)}}
+setTimeout(()=>{
+  try{
+    if(location.protocol==='file:')$('st').textContent='⚠️ Ab game alag asset files use karta hai — file:// se nahi chalega. Local server se kholo (README dekho).';
+    window.createImageBitmap=undefined; // textures blob/URL se TextureLoader ke through load hon
+    new THREE.GLTFLoader().load('assets/models/hut.glb',g=>{build(g);loadVillage(()=>{ready=true;$('st').textContent='Taiyaar! Hut aur gaon dono ready hain.';$('go').disabled=false;p1Start()})},undefined,err=>{$('st').textContent='Load error (assets/models/hut.glb): '+(err&&err.message||err)});
+  }catch(e){$('st').textContent='Load error: '+e.message}
+},60);
+</script></body></html>
