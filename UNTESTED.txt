@@ -1,6 +1,5 @@
-*** THIS BUILD (Phase 1 r2) IS STILL UNTESTED IN A BROWSER ***
-No rendering, console, touch or performance test has been run: the build sandbox has no network and no Three.js r128.
-Verified offline only: JS syntax, asset-manager/config/placement logic (node tools/test_p1_logic.js, 33 checks, fake loader),
-asset paths + GLB validity + config-regex-vs-mesh (python3 tools/check_assets.py), wheel-fix maths on real vertices
-(python3 tools/verify_car_geometry.py). Details and everything NOT verified: docs/PHASE1_REPORT.md.
-URL switches: ?debug  ?spawns  ?gallery  ?carlights
+*** r3 CORRECTION BUILD — STILL NOT RUN IN A BROWSER ***
+No Three.js / network in the build sandbox. Verified offline: JS syntax, node tools/test_p1_logic.js (33), node tools/test_hut_ground.js (13),
+python3 tools/check_assets.py, and offline preview renders in screenshots/ (own renderer, NOT the game).
+Details + remaining issues: docs/CORRECTION_REPORT_r3.md
+URL switches: ?debug ?dev ?spawns ?gallery ?carlights

@@ -1,4 +1,7 @@
-# THE LAST VILLAGE — Phase 1 r2 (characters + car)  ·  UNTESTED BUILD
+# THE LAST VILLAGE — Phase 1 r3 (final corrections)  ·  UNTESTED IN A BROWSER
+
+See docs/CORRECTION_REPORT_r3.md (what changed, what was and was NOT verified) and screenshots/ (offline asset previews, not in-game).
+URL switches now: ?debug / ?dev also show the developer buttons (Gaon, Hut ke andar, Hut deewar).
 
 Existing game (hut, village, first-person movement, torch, doors, collision, touch controls) is preserved.
 Phase 1 adds 7 characters and the player's damaged sedan, loaded from external files.

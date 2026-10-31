@@ -1,0 +1,118 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>GLB offline preview (QA tool, NOT the game)</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head><body><canvas id="c"></canvas>
+<script>
+/* Offline QA renderer: draws .glb files with CPU skinning + base-colour textures in plain WebGL2 (no Three.js).
+ * It exists only because the build sandbox has no Three.js / network. Pictures made with it are PREVIEWS OF THE ASSETS,
+ * not screenshots of the running game (different shader, different lighting). */
+const M4={
+ id(){return new Float32Array([1,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1])},
+ mul(a,b){const o=new Float32Array(16);for(let c=0;c<4;c++)for(let r=0;r<4;r++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+r]*b[c*4+k];o[c*4+r]=s}return o},
+ trs(t,q,s){const[x,y,z,w]=q,x2=x+x,y2=y+y,z2=z+z,xx=x*x2,xy=x*y2,xz=x*z2,yy=y*y2,yz=y*z2,zz=z*z2,wx=w*x2,wy=w*y2,wz=w*z2;
+  return new Float32Array([(1-(yy+zz))*s[0],(xy+wz)*s[0],(xz-wy)*s[0],0,(xy-wz)*s[1],(1-(xx+zz))*s[1],(yz+wx)*s[1],0,(xz+wy)*s[2],(yz-wx)*s[2],(1-(xx+yy))*s[2],0,t[0],t[1],t[2],1])},
+ inv(m){const o=new Float32Array(16),a=m;const b00=a[0]*a[5]-a[1]*a[4],b01=a[0]*a[6]-a[2]*a[4],b02=a[0]*a[7]-a[3]*a[4],b03=a[1]*a[6]-a[2]*a[5],b04=a[1]*a[7]-a[3]*a[5],b05=a[2]*a[7]-a[3]*a[6],b06=a[8]*a[13]-a[9]*a[12],b07=a[8]*a[14]-a[10]*a[12],b08=a[8]*a[15]-a[11]*a[12],b09=a[9]*a[14]-a[10]*a[13],b10=a[9]*a[15]-a[11]*a[13],b11=a[10]*a[15]-a[11]*a[14];
+  let d=b00*b11-b01*b10+b02*b09+b03*b08-b04*b07+b05*b06;d=1/d;
+  o[0]=(a[5]*b11-a[6]*b10+a[7]*b09)*d;o[1]=(a[2]*b10-a[1]*b11-a[3]*b09)*d;o[2]=(a[13]*b05-a[14]*b04+a[15]*b03)*d;o[3]=(a[10]*b04-a[9]*b05-a[11]*b03)*d;
+  o[4]=(a[6]*b08-a[4]*b11-a[7]*b07)*d;o[5]=(a[0]*b11-a[2]*b08+a[3]*b07)*d;o[6]=(a[14]*b02-a[12]*b05-a[15]*b01)*d;o[7]=(a[8]*b05-a[10]*b02+a[11]*b01)*d;
+  o[8]=(a[4]*b10-a[5]*b08+a[7]*b06)*d;o[9]=(a[1]*b08-a[0]*b10-a[3]*b06)*d;o[10]=(a[12]*b04-a[13]*b02+a[15]*b00)*d;o[11]=(a[9]*b02-a[8]*b04-a[11]*b00)*d;
+  o[12]=(a[5]*b07-a[4]*b09-a[6]*b06)*d;o[13]=(a[0]*b09-a[1]*b07+a[2]*b06)*d;o[14]=(a[13]*b01-a[12]*b03-a[14]*b00)*d;o[15]=(a[8]*b03-a[9]*b01+a[10]*b00)*d;return o},
+ persp(f,asp,n,fr){const t=1/Math.tan(f/2),o=new Float32Array(16);o[0]=t/asp;o[5]=t;o[10]=(fr+n)/(n-fr);o[11]=-1;o[14]=2*fr*n/(n-fr);return o},
+ look(e,c,u){let zx=e[0]-c[0],zy=e[1]-c[1],zz=e[2]-c[2];let l=Math.hypot(zx,zy,zz);zx/=l;zy/=l;zz/=l;let xx=u[1]*zz-u[2]*zy,xy=u[2]*zx-u[0]*zz,xz=u[0]*zy-u[1]*zx;l=Math.hypot(xx,xy,xz);xx/=l;xy/=l;xz/=l;
+  const yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;return new Float32Array([xx,yx,zx,0,xy,yy,zy,0,xz,yz,zz,0,-(xx*e[0]+xy*e[1]+xz*e[2]),-(yx*e[0]+yy*e[1]+yz*e[2]),-(zx*e[0]+zy*e[1]+zz*e[2]),1])},
+ rotY(a,p){const c=Math.cos(a),s=Math.sin(a),m=M4.id();m[0]=c;m[2]=-s;m[8]=s;m[10]=c;const t=M4.id();t[12]=p[0];t[13]=p[1];t[14]=p[2];const u=M4.id();u[12]=-p[0];u[13]=-p[1];u[14]=-p[2];return M4.mul(t,M4.mul(m,u))},
+ rotX(a,p){const c=Math.cos(a),s=Math.sin(a),m=M4.id();m[5]=c;m[6]=s;m[9]=-s;m[10]=c;const t=M4.id();t[12]=p[0];t[13]=p[1];t[14]=p[2];const u=M4.id();u[12]=-p[0];u[13]=-p[1];u[14]=-p[2];return M4.mul(t,M4.mul(m,u))},
+ pt(m,x,y,z){return[m[0]*x+m[4]*y+m[8]*z+m[12],m[1]*x+m[5]*y+m[9]*z+m[13],m[2]*x+m[6]*y+m[10]*z+m[14]]}
+};
+const gl=document.getElementById('c').getContext('webgl2',{preserveDrawingBuffer:true,antialias:true});
+const VS=`#version 300 es
+in vec3 p;in vec3 n;in vec2 uv;uniform mat4 VP;uniform mat4 W;out vec3 vN;out vec3 vP;out vec2 vUV;
+void main(){vec4 w=W*vec4(p,1.);vP=w.xyz;vN=mat3(W)*n;vUV=uv;gl_Position=VP*w;}`;
+const FS=`#version 300 es
+precision highp float;in vec3 vN;in vec3 vP;in vec2 vUV;out vec4 o;
+uniform sampler2D tex;uniform vec4 col;uniform float hasTex;uniform float cutoff;uniform vec2 uvOff;uniform vec2 uvSc;
+uniform vec3 eye;uniform vec3 sky;uniform vec3 gnd;uniform vec3 keyD;uniform vec3 keyC;uniform vec3 fillD;uniform vec3 fillC;
+uniform vec3 torchP;uniform vec3 torchD;uniform vec3 torchC;uniform float torchOn;uniform float fogD;uniform vec3 fogC;
+uniform float mode; // 0 normal  1 shadow-entity  2 eye(basic)  3 flat colour
+uniform vec3 rimC;uniform float rimS;uniform float rimP;
+void main(){
+  vec4 b=col;if(hasTex>.5){vec4 t=texture(tex,vUV*uvSc+uvOff);t.rgb=pow(t.rgb,vec3(2.2));b*=t;}
+  if(b.a<cutoff)discard;
+  vec3 N=normalize(vN);vec3 V=normalize(eye-vP);if(dot(N,V)<0.)N=-N;
+  vec3 alb=b.rgb;vec3 c;
+  float hemi=N.y*.5+.5;vec3 amb=mix(gnd,sky,hemi);
+  vec3 lit=amb+keyC*max(dot(N,keyD),0.)+fillC*max(dot(N,fillD),0.);
+  if(torchOn>.5){vec3 L=torchP-vP;float d=length(L);L/=d;float cone=smoothstep(.80,.93,dot(-L,torchD));float att=clamp(1.-d/32.,0.,1.);lit+=torchC*max(dot(N,L),0.)*cone*att*att*3.;}
+  c=alb*lit;
+  if(mode>.5&&mode<1.5){float r=pow(1.-clamp(dot(N,V),0.,1.),rimP);c+=rimC*r*rimS;}
+  if(mode>1.5&&mode<2.5)c=alb;
+  if(mode>2.5)c=alb;
+  float fd=length(eye-vP);float f=1.-exp(-fogD*fogD*fd*fd);c=mix(c,fogC,f);
+  o=vec4(pow(c,vec3(1./2.2)),1.);}`;
+function sh(t,s){const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(o));return o}
+const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,VS));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,FS));gl.linkProgram(pr);if(!gl.getProgramParameter(pr,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(pr));gl.useProgram(pr);
+const U=n=>gl.getUniformLocation(pr,n),A=n=>gl.getAttribLocation(pr,n);
+const CT={5120:Int8Array,5121:Uint8Array,5122:Int16Array,5123:Uint16Array,5125:Uint32Array,5126:Float32Array},NC={SCALAR:1,VEC2:2,VEC3:3,VEC4:4,MAT4:16};
+async function loadGLB(url){const b=await (await fetch(url)).arrayBuffer(),dv=new DataView(b);let o=12,js,bin;
+  while(o<b.byteLength){const l=dv.getUint32(o,true),t=dv.getUint32(o+4,true);const ch=b.slice(o+8,o+8+l);o+=8+l;if(t===0x4E4F534A)js=JSON.parse(new TextDecoder().decode(ch));else if(t===0x004E4942)bin=ch}
+  const g={js,bin,url};
+  g.acc=i=>{const a=js.accessors[i],bv=js.bufferViews[a.bufferView],C=CT[a.componentType],nc=NC[a.type],off=(bv.byteOffset||0)+(a.byteOffset||0),st=bv.byteStride||0,es=C.BYTES_PER_ELEMENT*nc;
+    const out=new Float32Array(a.count*nc);const dvv=new DataView(bin);const get=a.componentType===5126?(p)=>dvv.getFloat32(p,true):a.componentType===5123?(p)=>dvv.getUint16(p,true):a.componentType===5125?(p)=>dvv.getUint32(p,true):a.componentType===5121?(p)=>dvv.getUint8(p):a.componentType===5120?(p)=>dvv.getInt8(p):(p)=>dvv.getInt16(p,true);
+    for(let k=0;k<a.count;k++){const base=off+k*(st||es);for(let c=0;c<nc;c++){let v=get(base+c*C.BYTES_PER_ELEMENT);if(a.normalized){if(a.componentType===5121)v/=255;else if(a.componentType===5123)v/=65535}out[k*nc+c]=v}}return out};
+  g.tex={};for(let i=0;i<(js.textures||[]).length;i++){const t=js.textures[i],im=js.images[t.source];if(!im||im.bufferView==null)continue;const bv=js.bufferViews[im.bufferView];
+    const blob=new Blob([bin.slice(bv.byteOffset||0,(bv.byteOffset||0)+bv.byteLength)],{type:im.mimeType||'image/png'});
+    try{const bm=await createImageBitmap(blob,{imageOrientation:'none',premultiplyAlpha:'none'});const tx=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tx);gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,bm);gl.generateMipmap(gl.TEXTURE_2D);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);g.tex[i]=tx}catch(e){console.warn('tex fail',i,e.message)}}
+  return g}
+function nodeLocal(n){if(n.matrix)return new Float32Array(n.matrix);return M4.trs(n.translation||[0,0,0],n.rotation||[0,0,0,1],n.scale||[1,1,1])}
+function matInfo(g,mi){const m=mi==null?{}:g.js.materials[mi]||{};const pbr=m.pbrMetallicRoughness||{},sg=(m.extensions||{}).KHR_materials_pbrSpecularGlossiness||{};
+  let col=pbr.baseColorFactor||sg.diffuseFactor||[1,1,1,1],ti=(pbr.baseColorTexture||sg.diffuseTexture||{}),tex=ti.index!=null?g.tex[g.js.textures[ti.index].source!=null?ti.index:-1]:null;
+  const tt=(ti.extensions||{}).KHR_texture_transform||{};
+  return{name:m.name||'',col,tex,cut:m.alphaMode==='MASK'?(m.alphaCutoff==null?.5:m.alphaCutoff):(m.alphaMode==='BLEND'?.35:0),off:tt.offset||[0,0],sc:tt.scale||[1,1]}}
+/* spec: {models:[{url, pre:Float32Array(16)?, hide:[regex], mode:'normal'|'shadow', matMode:{regex:modeNumber}, tint:[r,g,b], eyeMat:'name', post:[{nodes:regex,op:'rotY'|'rotX',pivot,angle}]}], ...} */
+const cache={};
+async function getModel(url){return cache[url]||(cache[url]=await loadGLB(url))}
+function meshOf(g,ni,W,skinMats){const n=g.js.nodes[ni],me=g.js.meshes[n.mesh],out=[];
+  for(const pr of me.primitives){const P=g.acc(pr.attributes.POSITION),N=pr.attributes.NORMAL!=null?g.acc(pr.attributes.NORMAL):null,UV=pr.attributes.TEXCOORD_0!=null?g.acc(pr.attributes.TEXCOORD_0):new Float32Array(P.length/3*2);
+    const idx=pr.indices!=null?g.acc(pr.indices):Uint32Array.from({length:P.length/3},(_,i)=>i);const cnt=P.length/3;const Q=new Float32Array(P.length),QN=new Float32Array(P.length);
+    if(n.skin!=null&&skinMats){const J=g.acc(pr.attributes.JOINTS_0),Wt=g.acc(pr.attributes.WEIGHTS_0);
+      for(let i=0;i<cnt;i++){let x=0,y=0,z=0,nx=0,ny=0,nz=0;for(let c=0;c<4;c++){const w=Wt[i*4+c];if(!w)continue;const m=skinMats[J[i*4+c]];const p=M4.pt(m,P[i*3],P[i*3+1],P[i*3+2]);x+=w*p[0];y+=w*p[1];z+=w*p[2];
+        if(N){nx+=w*(m[0]*N[i*3]+m[4]*N[i*3+1]+m[8]*N[i*3+2]);ny+=w*(m[1]*N[i*3]+m[5]*N[i*3+1]+m[9]*N[i*3+2]);nz+=w*(m[2]*N[i*3]+m[6]*N[i*3+1]+m[10]*N[i*3+2])}}
+        Q[i*3]=x;Q[i*3+1]=y;Q[i*3+2]=z;QN[i*3]=nx;QN[i*3+1]=ny;QN[i*3+2]=nz}}
+    else{for(let i=0;i<cnt;i++){const p=M4.pt(W,P[i*3],P[i*3+1],P[i*3+2]);Q[i*3]=p[0];Q[i*3+1]=p[1];Q[i*3+2]=p[2];if(N){QN[i*3]=W[0]*N[i*3]+W[4]*N[i*3+1]+W[8]*N[i*3+2];QN[i*3+1]=W[1]*N[i*3]+W[5]*N[i*3+1]+W[9]*N[i*3+2];QN[i*3+2]=W[2]*N[i*3]+W[6]*N[i*3+1]+W[10]*N[i*3+2]}}}
+    if(!N){for(let i=0;i<idx.length;i+=3){const a=idx[i],b=idx[i+1],c=idx[i+2];const ux=Q[b*3]-Q[a*3],uy=Q[b*3+1]-Q[a*3+1],uz=Q[b*3+2]-Q[a*3+2],vx=Q[c*3]-Q[a*3],vy=Q[c*3+1]-Q[a*3+1],vz=Q[c*3+2]-Q[a*3+2];const nx=uy*vz-uz*vy,ny=uz*vx-ux*vz,nz=ux*vy-uy*vx;for(const k of[a,b,c]){QN[k*3]+=nx;QN[k*3+1]+=ny;QN[k*3+2]+=nz}}}
+    out.push({Q,QN,UV,idx:Uint32Array.from(idx),mat:matInfo(g,pr.material),meshName:n.name||''})}return out}
+async function collect(m){const g=await getModel(m.url),js=g.js,nodes=js.nodes,sc=js.scenes[js.scene||0];const world=new Array(nodes.length),par=new Array(nodes.length).fill(-1);
+  const rec=(ni,P)=>{world[ni]=M4.mul(P,nodeLocal(nodes[ni]));for(const c of nodes[ni].children||[]){par[c]=ni;rec(c,world[ni])}};sc.nodes.forEach(r=>rec(r,m.pre||M4.id()));
+  // optional per-node post transforms (world space), applied to a node and everything below it
+  const post=new Array(nodes.length).fill(null);
+  (m.post||[]).forEach(op=>{const re=new RegExp(op.nodes,'i');nodes.forEach((n,i)=>{if(re.test(n.name||'')){const T=op.op==='mat'?new Float32Array(op.m):op.op==='rotY'?M4.rotY(op.angle,op.pivot):M4.rotX(op.angle,op.pivot);const mark=j=>{post[j]=post[j]?M4.mul(T,post[j]):T;(nodes[j].children||[]).forEach(mark)};mark(i)}})});
+  const items=[];
+  nodes.forEach((n,i)=>{if(n.mesh==null)return;let skinMats=null;if(n.skin!=null){const sk=js.skins[n.skin],ibm=g.acc(sk.inverseBindMatrices);skinMats=sk.joints.map((j,k)=>M4.mul(world[j],ibm.subarray(k*16,k*16+16)))}
+    let W=world[i];if(post[i]){W=M4.mul(post[i],W);if(skinMats)skinMats=skinMats.map(s=>M4.mul(post[i],s))}
+    const pth=[];for(let j=i;j!==-1;j=par[j])pth.push(nodes[j].name||'');for(const it of meshOf(g,i,W,skinMats)){it.nodeName=n.name||'';it.path=pth.join('/');it.spec=m;items.push(it)}});
+  return items}
+function draw(it,mode,tint,gcolor){const L=(n)=>U(n);const buf=(d,loc,sz)=>{const b=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,d,gl.STREAM_DRAW);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,sz,gl.FLOAT,false,0,0);return b};
+  const bs=[buf(it.Q,A('p'),3),buf(it.QN,A('n'),3),buf(it.UV,A('uv'),2)];const ib=gl.createBuffer();gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,it.idx,gl.STREAM_DRAW);
+  let c=it.mat.col.slice();if(tint)c=[c[0]*tint[0],c[1]*tint[1],c[2]*tint[2],c[3]];if(gcolor)c=[gcolor[0],gcolor[1],gcolor[2],c[3]];
+  gl.uniform4fv(L('col'),c);gl.uniform1f(L('mode'),mode);gl.uniform1f(L('cutoff'),it.mat.cut);gl.uniform2fv(L('uvOff'),it.mat.off);gl.uniform2fv(L('uvSc'),it.mat.sc);
+  if(it.mat.tex&&!(gcolor&&mode===3)){gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,it.mat.tex);gl.uniform1i(L('tex'),0);gl.uniform1f(L('hasTex'),1)}else gl.uniform1f(L('hasTex'),0);
+  gl.drawElements(gl.TRIANGLES,it.idx.length,gl.UNSIGNED_INT,0);bs.forEach(b=>gl.deleteBuffer(b));gl.deleteBuffer(ib)}
+window.renderSpec=async function(spec){const W=spec.w||900,H=spec.h||1000;const cv=document.getElementById('c');cv.width=W;cv.height=H;gl.viewport(0,0,W,H);
+  const bg=spec.bg||[.02,.025,.045];gl.clearColor(bg[0],bg[1],bg[2],1);gl.enable(gl.DEPTH_TEST);gl.disable(gl.CULL_FACE);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  const cam=spec.cam,VP=M4.mul(M4.persp((cam.fov||35)*Math.PI/180,W/H,cam.near||.05,cam.far||400),M4.look(cam.eye,cam.target,cam.up||[0,1,0]));
+  gl.uniformMatrix4fv(U('VP'),false,VP);gl.uniformMatrix4fv(U('W'),false,M4.id());gl.uniform3fv(U('eye'),cam.eye);
+  const Lt=spec.light||{};const v3=(k,d)=>gl.uniform3fv(U(k),Lt[k]||d);v3('sky',[.16,.19,.30]);v3('gnd',[.07,.06,.06]);v3('keyD',[-.4,.8,.45]);v3('keyC',[.35,.4,.6]);v3('fillD',[.6,.2,-.7]);v3('fillC',[.08,.08,.1]);
+  gl.uniform3fv(U('torchP'),Lt.torchP||cam.eye);gl.uniform3fv(U('torchD'),Lt.torchD||[0,0,-1]);gl.uniform3fv(U('torchC'),Lt.torchC||[1,.9,.7]);gl.uniform1f(U('torchOn'),Lt.torch?1:0);gl.uniform1f(U('fogD'),spec.fog||0);gl.uniform3fv(U('fogC'),spec.fogC||bg);
+  gl.uniform3fv(U('rimC'),Lt.rimC||[.2,.25,.4]);gl.uniform1f(U('rimS'),Lt.rimS==null?0:Lt.rimS);gl.uniform1f(U('rimP'),Lt.rimP||3);
+  const log=[];
+  for(const m of spec.models){const items=await collect(m);const hide=m.hide?new RegExp(m.hide,'i'):null;
+    for(const it of items){if(hide&&hide.test(it.path))continue;let mode=0,tint=m.tint,gc=null;
+      if(m.shadow){const eye=m.eyeMat&&it.mat.name===m.eyeMat;mode=eye?2:1;if(eye){gc=m.eyeColor}else{gc=(it.mat.cut>0)?m.hairColor:m.bodyColor;gc=gc||m.bodyColor;mode=1}}
+      if(m.flat){mode=3;gc=m.flat}
+      if(m.flatPath){for(const k in m.flatPath)if(new RegExp(k,'i').test(it.path)){mode=0;gc=m.flatPath[k];it.mat.tex=null}}
+      if(m.matTint){for(const k in m.matTint)if(new RegExp(k,'i').test(it.nodeName+'|'+it.mat.name))tint=m.matTint[k]}
+      if(m.shadow&&mode===1){it.mat.tex=null}
+      draw(it,mode,tint,gc)}}
+  return cv.toDataURL('image/png')};
+window.bounds=async function(url,pre){const items=await collect({url,pre});const lo=[1e9,1e9,1e9],hi=[-1e9,-1e9,-1e9];for(const it of items)for(let i=0;i<it.Q.length;i+=3)for(let k=0;k<3;k++){lo[k]=Math.min(lo[k],it.Q[i+k]);hi[k]=Math.max(hi[k],it.Q[i+k])}return{lo,hi}};
+window.M4=M4;window.ready=true;
+</script></body></html>

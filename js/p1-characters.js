@@ -214,16 +214,20 @@
     return m;
   }
   function makeShadowEntity(model) {
-    const S = P1.config.saaya, body = shadowPhong(S, S.bodyColor);
+    const S = P1.config.saaya, body = shadowPhong(S, S.bodyColor), eyes = [];
     model.traverse(function (o) {
       if (!o.isMesh) return;
       const out = [].concat(o.material).map(function (m) {
-        if (S.eyeMat && m.name === S.eyeMat) { const e = new T.MeshBasicMaterial({ map: m.map, color: S.eyeColor }); e.skinning = !!o.isSkinnedMesh; return e; }
+        if (S.eyeMat && m.name === S.eyeMat) {
+          const e = new T.MeshBasicMaterial({ map: m.map, color: S.eyeColor }); e.skinning = !!o.isSkinnedMesh;
+          e.color.multiplyScalar(S.eyeDim == null ? 1 : S.eyeDim); e.userData.eyeBase = e.color.clone(); eyes.push(e); return e;
+        }
         if (m.transparent || m.alphaTest > 0) return shadowPhong(S, S.hairColor, m.map, 0.4);   // hair / lashes: keep the cut-out, make it black
         return body;
       });
       o.material = Array.isArray(o.material) ? out : out[0];
     });
+    return eyes;
   }
 
   /* ------------------------------------------------------------------ idle */
@@ -248,7 +252,8 @@
     if (cfg.anim) return; // the supplied animation provides the motion
     if (rig.bones.length && (rig.chest || rig.head)) {
       holder.updateMatrixWorld(true);
-      slot.idle = { mode: 'bones', chest: boneIdle(rig.chest, holder), neck: boneIdle(rig.neck, holder), head: boneIdle(rig.head, holder) };
+      slot.idle = { mode: 'bones', chest: boneIdle(rig.chest, holder), neck: boneIdle(rig.neck, holder), head: boneIdle(rig.head, holder),
+                    hips: boneIdle(rig.hips, holder), armL: boneIdle(rig.arms.l, holder), armR: boneIdle(rig.arms.r, holder) };
       return;
     }
     // static (un-rigged) mesh: breathing by scaling about the feet + weight shift; head turn only if the head is a separate mesh
@@ -267,20 +272,29 @@
   }
   function idleUpdate(slot, t) {
     const idle = slot.idle; if (!idle || idle.mode === 'none') return;
-    const k = slot.cfg.idleRate || 1, tt = t * k + slot.phase;
+    const k = slot.cfg.idleRate || 1, tt = t * k + slot.phase, eerie = slot.cfg.shadow ? 2.2 : 1;
     const br = Math.sin(tt * 1.45);                                           // ~4.3 s breath
-    const sw = Math.sin(tt * 0.37) * 0.6 + Math.sin(tt * 0.91 + 1.3) * 0.4;    // slow head look
+    const sw = Math.sin(tt * 0.37) * 0.6 + Math.sin(tt * 0.91 + 1.3) * 0.4;    // slow look left/right
     const nod = Math.sin(tt * 0.53 + 0.7), tilt = Math.sin(tt * 0.29);
-    const eerie = slot.cfg.shadow ? 2.2 : 1;
+    const shift = Math.sin(tt * 0.21) * 0.7 + Math.sin(tt * 0.57 + 2.0) * 0.3;   // weight shift from foot to foot (~30 s)
+    const glance = Math.max(0, Math.sin(tt * 0.13 + 1.0)) ** 6;                  // occasional longer look to the side
     if (idle.mode === 'bones') {
-      if (idle.chest) { rot(idle.chest, 0.012 * br, 0.012 * Math.sin(tt * 0.31), 0.008 * Math.sin(tt * 0.23)); idle.chest.node.scale.copy(idle.chest.baseScale).multiplyScalar(1 + 0.006 * br); }
-      if (idle.neck) rot(idle.neck, 0.012 * nod, 0.03 * sw, 0.01 * tilt * eerie);
-      if (idle.head) rot(idle.head, 0.02 * nod, 0.05 * sw, 0.02 * tilt * eerie);
+      if (idle.hips) rot(idle.hips, 0.006 * br, 0.03 * shift, 0.028 * shift);
+      if (idle.chest) { rot(idle.chest, 0.02 * br, 0.03 * Math.sin(tt * 0.31) - 0.02 * shift, -0.02 * shift); idle.chest.node.scale.copy(idle.chest.baseScale).multiplyScalar(1 + 0.008 * br); }
+      if (idle.neck) rot(idle.neck, 0.02 * nod, 0.07 * sw + 0.12 * glance, 0.02 * tilt * eerie);
+      if (idle.head) rot(idle.head, 0.035 * nod, 0.10 * sw + 0.18 * glance, 0.03 * tilt * eerie);
+      if (idle.armL) rot(idle.armL, 0.05 * Math.sin(tt * 0.9) + 0.02 * br, 0, 0.03 * Math.sin(tt * 0.45) + 0.02 * shift);
+      if (idle.armR) rot(idle.armR, -0.05 * Math.sin(tt * 0.9 + 0.8) + 0.02 * br, 0, -0.03 * Math.sin(tt * 0.45 + 1.1) + 0.02 * shift);
     } else {
-      slot.sway.scale.set(1 - 0.0015 * br, 1 + 0.0035 * br, 1 - 0.0015 * br);
-      slot.sway.rotation.z = 0.006 * Math.sin(tt * 0.31);
-      slot.sway.rotation.x = 0.004 * Math.sin(tt * 0.23 + 0.5);
-      if (idle.pivot) { idle.pivot.rotation.y = 0.05 * sw; idle.pivot.rotation.x = 0.02 * nod; }
+      slot.sway.scale.set(1 - 0.003 * br, 1 + 0.006 * br, 1 - 0.003 * br);
+      slot.sway.rotation.z = 0.014 * shift + 0.004 * Math.sin(tt * 0.31);
+      slot.sway.rotation.x = 0.006 * Math.sin(tt * 0.23 + 0.5);
+      slot.sway.rotation.y = 0.025 * Math.sin(tt * 0.17);
+      if (idle.pivot) { idle.pivot.rotation.y = 0.12 * sw + 0.2 * glance; idle.pivot.rotation.x = 0.04 * nod; }
+    }
+    if (slot.eyeMats) {   // SAAYA: dim eyes that flicker slowly and now and then nearly go out
+      const S = P1.config.saaya, f = 1 - (S.eyeFlicker || 0) * (0.5 + 0.5 * Math.sin(tt * 2.3) * Math.sin(tt * 0.77 + 1.0));
+      for (let i = 0; i < slot.eyeMats.length; i++) { const e = slot.eyeMats[i]; e.color.copy(e.userData.eyeBase).multiplyScalar(f); }
     }
   }
 
@@ -301,7 +315,8 @@
       info.bones = rig.bones.length;
       if (rig.hips && rig.head) orient(fix, rig, info); else if (rig.bones.length) info.faceFix = 'none (hips/head bones not found)';
       if (cfg.unlit) convertUnlit(model);
-      if (cfg.shadow) makeShadowEntity(model); else applyAppearance(model, cfg);
+      let eyeMats = null;
+      if (cfg.shadow) eyeMats = makeShadowEntity(model); else applyAppearance(model, cfg);
       if (cfg.relax && rig.bones.length && !cfg.anim) relaxArms(rig, model, info);
       if (cfg.shadow && P1.config.saaya.stretch) { const st = P1.config.saaya.stretch; sway.scale.set(st[0], st[1], st[2]); }
 
@@ -320,7 +335,7 @@
       world.scene.add(holder); holder.updateMatrixWorld(true);
 
       slot.holder = holder; slot.sway = sway; slot.fix = fix; slot.model = model; slot.url = cfg.url;
-      slot.phase = Math.random() * 6.28;
+      slot.phase = Math.random() * 6.28; slot.eyeMats = eyeMats;
       setupIdle(slot, rig, model, fix, holder);
 
       if (cfg.anim) {
@@ -346,7 +361,7 @@
       P1.dispose(slot.holder);   // whole holder, not just gltf.scene: re-parented parts (Dev's head) and cloned/graded materials live outside it
     }
     if (slot.url) P1.assets.release(slot.url);
-    slot.holder = slot.model = slot.mixer = slot.idle = slot.sway = slot.fix = null; slot.url = null;
+    slot.holder = slot.model = slot.mixer = slot.idle = slot.sway = slot.fix = slot.eyeMats = null; slot.url = null;
     slot.status = 'idle'; P1.status[slot.cfg.id] = 'idle'; if (why) P1.log('unloaded ' + slot.cfg.id + ' (' + why + ')');
   }
 
@@ -419,13 +434,18 @@
     slot.spawnInfo = { anchor: anchorUsed, x: +slot.px.toFixed(1), z: +slot.pz.toFixed(1), yawDeg: Math.round(f.yaw * 57.2958), snapped: snapped, tried: tries };
     slot.placed = true;
     P1.log('spawn ' + id, slot.spawnInfo);
-    if (P1.cfg.spawns) addMarker(slot);
+    if (P1.cfg.spawns) {
+      addMarker(slot);
+      if (id === 'saaya') (C.saayaEncounters || []).slice(1).forEach(function (e, i) {
+        addMarker({ px: e.x, pz: e.z, py: world.ground(e.x, e.z), yaw: e.face && e.face.yaw != null ? e.face.yaw * Math.PI / 180 : 0 }, 6 + i);
+      });
+    }
   }
   // ?spawns: a coloured pole (spawn point) with a cone pointing where the NPC will face
   let mk = null;
-  function addMarker(slot) {
+  function addMarker(slot, idx) {
     if (!mk) mk = { pole: new T.CylinderGeometry(0.05, 0.05, 2.2, 6), cone: new T.ConeGeometry(0.18, 0.5, 8).rotateX(Math.PI / 2) };
-    const col = new T.Color().setHSL(slots.indexOf(slot) / 7, 0.9, 0.55);
+    const col = new T.Color().setHSL((idx != null ? idx : slots.indexOf(slot)) / 10, 0.9, 0.55);
     const g = new T.Group(), m = new T.MeshBasicMaterial({ color: col, fog: false });
     const pole = new T.Mesh(mk.pole, m); pole.position.y = 1.1; g.add(pole);
     const cone = new T.Mesh(mk.cone, m); cone.position.set(0, 1.9, 0.35); g.add(cone);

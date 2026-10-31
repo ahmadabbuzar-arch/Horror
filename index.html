@@ -13,24 +13,28 @@ h1{margin:0 0 6px;font-size:26px;letter-spacing:.5px}
 button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:10px 16px}
 #go{margin:16px 0 10px;background:var(--ac);color:#150b02;border:0;font-weight:700;font-size:18px;padding:12px 28px}
 #go:disabled{opacity:.5}
-#hud{flex-wrap:wrap;justify-content:flex-end;max-width:100%;position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);right:12px;display:none;gap:8px;z-index:10}
+#hud{flex-wrap:wrap;justify-content:flex-end;max-width:100%;position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;display:none;gap:6px;z-index:10}
+#hud button{padding:5px 9px;font-size:12px;border-radius:10px;opacity:.8}
+#bl{width:36px;height:36px;padding:0!important;font-size:16px!important;border-radius:50%!important}
+.dev{display:none}body.devui .dev{display:inline-block}  /* developer shortcuts: only with ?debug or ?dev in the URL */
 #cross{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:rgba(255,255,255,.55);display:none;z-index:5;pointer-events:none}
 #pad,#look{position:fixed;top:0;bottom:0;z-index:6;display:none}
 #pad{left:0;width:45%}#look{right:0;width:55%}
-.j{position:fixed;width:110px;height:110px;margin:-55px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);display:none;z-index:7;pointer-events:none}
-.j i{position:absolute;left:35px;top:35px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.35)}
-#dr{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 64px);z-index:10;background:var(--ac);color:#150b02;border:0;font-weight:700;font-size:17px;padding:12px 22px}
-#msg{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 14px);text-align:center;font-size:13px;opacity:.7;z-index:8;pointer-events:none}
+.j{position:fixed;width:96px;height:96px;margin:-48px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);display:none;z-index:7;pointer-events:none}
+.j i{position:absolute;left:30px;top:30px;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.35)}
+#dr{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 56px);z-index:10;background:rgba(217,130,43,.92);color:#150b02;border:0;font-weight:700;font-size:14px;padding:8px 16px;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.5);animation:prm .18s ease-out}
+@keyframes prm{from{opacity:0;transform:translateX(-50%) translateY(6px)}to{opacity:1;transform:translateX(-50%)}}
+#msg{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);text-align:center;font-size:12px;opacity:.65;z-index:8;pointer-events:none}
 </style></head><body>
 <canvas id="c"></canvas><div id="cross"></div>
 <div id="pad"></div><div id="look"></div><div class="j" id="jb"><i id="jk"></i></div>
-<div id="hud"><button id="bv">🏘️ Gaon</button><button id="bh">🏠 Hut ke andar</button><button id="bw">👻 Hut deewar: OFF</button><button id="bl">🔦</button></div>
+<div id="hud"><button id="bv" class="dev">🏘️ Gaon</button><button id="bh" class="dev">🏠 Hut ke andar</button><button id="bw" class="dev">👻 Hut deewar: OFF</button><button id="bl" aria-label="Torch">🔦</button></div>
 <button id="dr" style="display:none"></button><div id="msg"></div>
 <div id="ov"><div class="card"><h1>🏚️ Horror House</h1>
 <div class="sm" id="st">Scene load ho raha hai…</div>
 <button id="go" disabled>▶ Khelo</button>
 <div class="sm">PC: WASD chalo · Mouse dekho · Shift daudo · F torch · H hut · G gaon · E door kholo/band karo<br>Mobile: left side joystick · right side swipe se dekho</div>
-<div class="sm" style="margin-top:10px;opacity:.5">v8 · Phase 1 r2 (characters + car) — UNTESTED BUILD · Hut: “Horror House Scene” by CGS CREATOR (Sketchfab, CC-BY-4.0)</div>
+<div class="sm" style="margin-top:10px;opacity:.5">v8 · Phase 1 r3 corrections · Hut: “Horror House Scene” by CGS CREATOR (Sketchfab, CC-BY-4.0)</div>
 <div class="sm" style="margin-top:6px;opacity:.45;font-size:10px;line-height:1.35">Models (Sketchfab): Mechanic – 00amza · Old Lady – silran666 · Guard – DJMaesen · Dark Psychic Kid – sebasxpm · Man – Mcyborg · Abandoned Sedan – Rashad Ibrahimli (all CC-BY-4.0) · Horror Girl – LostBoyz2078 (CC-BY-NC-4.0, non-commercial) · Doctor – Innerscene Corp (CC0)</div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -38,6 +42,7 @@ button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(2
 <script>window.THREE||document.write('<script src="vendor/three.min.js"><\/script>')</script>
 <script>(window.THREE&&THREE.GLTFLoader)||document.write('<script src="vendor/GLTFLoader.js"><\/script>')</script>
 <script src="js/p1-core.js"></script>
+<script src="js/p1-ground.js"></script>
 <script src="js/p1-config.js"></script>
 <script src="js/p1-characters.js"></script>
 <script src="js/p1-car.js"></script>
@@ -60,16 +65,43 @@ let doors=[],nearDoor=null,rootRef=null,vmesh=[],nearV=[],cabinMeshes=[],trees=[
 const pos=new THREE.Vector3(),rc=new THREE.Raycaster();let gy=0,yaw=0,pitch=0,bob=0;
 const keys={},joy={x:0,y:0},DOWN=new THREE.Vector3(0,-1,0);
 
+function hutGroundFix(root,cabin,b,scale,sink){
+  // 1) real base plane of the hut = lowest level several separate parts stand on (see js/p1-ground.js); falls back to the old lowest vertex
+  let base=b.min.y,method='bbox-min (P1.baseLevel missing)';
+  try{
+    if(window.P1&&P1.baseLevel){
+      cabin.updateMatrixWorld(true);const groups=[],v=new THREE.Vector3();
+      cabin.traverse(o=>{if(!o.isMesh||!o.geometry||!o.geometry.attributes.position)return;const pa=o.geometry.attributes.position,ys=new Float32Array(pa.count);
+        for(let i=0;i<pa.count;i++){v.fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld);ys[i]=v.y}groups.push(ys)});
+      const lv=P1.baseLevel(groups);if(isFinite(lv)){base=lv;method='P1.baseLevel'}
+    }
+  }catch(e){console.warn('[hut] base level failed, using bbox min',e)}
+  // 2) terrain height under the (scaled) footprint: downward rays onto the ground plane of the same GLB
+  let ground=0;const terr=[];root.traverse(o=>{if(!o.isMesh)return;const tb=new THREE.Box3().setFromObject(o);if(tb.max.x-tb.min.x>100&&tb.max.y-tb.min.y<2)terr.push(o)}); // the big flat ground plane
+  try{
+    if(terr.length){
+      const c=b.getCenter(new THREE.Vector3()),sz=b.getSize(new THREE.Vector3()),hx=sz.x*scale*0.4,hz=sz.z*scale*0.4,ray=new THREE.Raycaster(),ys=[];
+      [[0,0],[hx,hz],[-hx,hz],[hx,-hz],[-hx,-hz]].forEach(d=>{ray.set(new THREE.Vector3(c.x+d[0],b.max.y+20,c.z+d[1]),new THREE.Vector3(0,-1,0));const h=ray.intersectObjects(terr,false)[0];if(h)ys.push(h.point.y)});
+      if(ys.length)ground=Math.max.apply(null,ys);
+    }
+  }catch(e){console.warn('[hut] terrain probe failed, assuming y=0',e)}
+  const shift=(ground-sink)-base;
+  return{base:+base.toFixed(4),oldPivot:+b.min.y.toFixed(4),ground:+ground.toFixed(4),sink:sink,shift:+shift.toFixed(4),method:method};
+}
 function build(gltf){
   const root=gltf.scene;rootRef=root;scene.add(root);
   root.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.side=THREE.DoubleSide;if(m.transparent){m.transparent=false;m.alphaTest=0.35}if(m.map)m.map.anisotropy=4})});
   const cabin=root.getObjectByName('Cabin8_5');
   if(cabin){ // hut ko insaan ke size ka bana do (original bahut chhota tha)
+    const HUT_SCALE=3.6,HUT_SINK=0.03; // HUT_SINK: how far (m) the wall base is embedded in the terrain, so no gap can show
     const b=new THREE.Box3().setFromObject(cabin),c=b.getCenter(new THREE.Vector3());
-    const pv=new THREE.Group();pv.position.set(c.x,b.min.y,c.z);scene.add(pv);pv.updateMatrixWorld(true);
-    pv.attach(cabin);pv.scale.setScalar(3.6);pv.updateMatrixWorld(true);
+    const fix=hutGroundFix(root,cabin,b,HUT_SCALE,HUT_SINK);
+    // scale about the REAL base plane (not the lowest stray vertex), then move straight down onto the terrain. X/Z/scale/rotation unchanged.
+    const pv=new THREE.Group();pv.position.set(c.x,fix.base,c.z);scene.add(pv);pv.updateMatrixWorld(true);
+    pv.attach(cabin);pv.scale.setScalar(HUT_SCALE);pv.position.y+=fix.shift;pv.updateMatrixWorld(true);
     cabin.traverse(o=>{if(o.isMesh)cabinMeshes.push(o)});
     new THREE.Box3().setFromObject(cabin).getCenter(cc);
+    window.__hutFix=fix;
   }
   [...root.children].forEach(g=>{
     if(g===cabin||!g.children.length)return;
@@ -131,7 +163,7 @@ function goVillage(){const d=doors[0];if(!d)return;pos.set(d.x+2.2,0,d.z);gy=0;y
 function toggleDoor(){if(nearDoor){nearDoor.t=nearDoor.t?0:1;showDoor(true)}}
 function showDoor(force){
   let nd=null,bd=3.6;for(const d of doors){const q=Math.hypot(pos.x-d.x,pos.z-d.z);if(q<bd){bd=q;nd=d}}
-  if(nd!==nearDoor||force){nearDoor=nd;const b=$('dr');b.style.display=nd?'block':'none';if(nd)b.textContent=nd.t?'🚪 Door band karo (E)':'🚪 Door kholo (E)'}
+  if(nd!==nearDoor||force){nearDoor=nd;const b=$('dr');b.style.display=nd?'block':'none';if(nd){const k=touch?'':' (E)';b.textContent=(nd.isCar?(nd.t?'🚗 Car door band karo':'🚗 Car door kholo'):(nd.t?'🚪 Door band karo':'🚪 Door kholo'))+k}}
 }
 function update(dt){
   showDoor(false);for(const d of doors){d.cur+=(d.t-d.cur)*Math.min(1,dt*5);for(const pv of d.piv)pv.rotation.y=d.cur*pv.userData.th}
@@ -198,6 +230,7 @@ function p1Start(){try{if(window.P1&&P1.start)P1.start({scene,cam,pos,cc,doors,s
 setTimeout(()=>{
   try{
     if(location.protocol==='file:')$('st').textContent='⚠️ Ab game alag asset files use karta hai — file:// se nahi chalega. Local server se kholo (README dekho).';
+    if(/[?&](debug|dev)\b/.test(location.search))document.body.classList.add('devui');
     window.createImageBitmap=undefined; // textures blob/URL se TextureLoader ke through load hon
     new THREE.GLTFLoader().load('assets/models/hut.glb',g=>{build(g);loadVillage(()=>{ready=true;$('st').textContent='Taiyaar! Hut aur gaon dono ready hain.';$('go').disabled=false;p1Start()})},undefined,err=>{$('st').textContent='Load error (assets/models/hut.glb): '+(err&&err.message||err)});
   }catch(e){$('st').textContent='Load error: '+e.message}

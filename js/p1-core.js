@@ -6,7 +6,7 @@
   const P1 = (window.P1 = window.P1 || {});
   const QS = location.search;
 
-  P1.VERSION = 'phase1-r2-untested';
+  P1.VERSION = 'phase1-r3-corrections-untested';
   P1.cfg = {
     loadRadius: 30,        // metres: start loading a character when the player is this close
     unloadRadius: 46,      // metres: dispose a character when the player is farther than this
@@ -110,8 +110,10 @@
     return m;
   };
 
-  /* ---------- measuring: bounding box of VISIBLE meshes only (bind pose for skinned meshes) ---------- */
-  const _b = new THREE.Box3();
+  /* ---------- measuring: bounding box of VISIBLE meshes. Skinned meshes are measured from the REAL skinned vertex positions
+   * (skeleton.update() + SkinnedMesh.boneTransform), not from geometry-box x matrixWorld: for rigs whose mesh node carries a
+   * 0.01 scale (Kamla Devi) the old method under-measured the height ~4x, which made her ~6 m tall. ---------- */
+  const _b = new THREE.Box3(), _v = new THREE.Vector3();
   P1.measure = function (root) {
     root.updateMatrixWorld(true);
     const box = new THREE.Box3();
@@ -119,6 +121,12 @@
       if (!o.isMesh || !o.geometry) return;
       let n = o;
       while (n) { if (!n.visible) return; if (n === root) break; n = n.parent; }
+      const pos = o.geometry.attributes.position;
+      if (o.isSkinnedMesh && o.skeleton && o.boneTransform && pos) {
+        o.skeleton.update();
+        for (let i = 0; i < pos.count; i++) { o.boneTransform(i, _v); _v.applyMatrix4(o.matrixWorld); box.expandByPoint(_v); }
+        return;
+      }
       if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
       _b.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
       box.union(_b);
@@ -178,6 +186,7 @@
       document.body.appendChild(dbg);
     }
     let s = 'P1 ' + P1.VERSION + ' | assets cached: ' + P1.assets.count() + '\n';
+    if (window.__hutFix) { const h = window.__hutFix; s += 'hut: base ' + h.base + ' (old pivot ' + h.oldPivot + ') ground ' + h.ground + ' sink ' + h.sink + ' shift ' + h.shift + ' m [' + h.method + ']\n'; }
     for (const id in P1.status) {
       const i = P1.info[id];
       s += id + ': ' + P1.status[id] + (i ? ' h=' + i.height + 'm s=' + i.scale + (i.dist != null ? ' d=' + i.dist : '') + (i.spawn ? ' @' + i.spawn.x + ',' + i.spawn.z + (i.spawn.snapped ? ' (snapped)' : '') : '') : '') + '\n';
