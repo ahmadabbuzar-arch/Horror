@@ -78,7 +78,7 @@ for cid,fn in ROSTER.items():
         (okm if h else err)('%-9s materials[%d] mesh /%s/ -> %d meshes'%(cid,i,r.get('mesh'),len(h)))
     if a.get('anim'):
         c=[x.get('name') for x in j.get('animations',[])];(okm if a['anim'] in c else err)('%-9s clip "%s" in %s'%(cid,a['anim'],c))
-    if cid=='saaya':
+    if cid=='saaya' and not cfg['saaya'].get('ownLook'):
         e=cfg['saaya']['eyeMat'];(okm if e in mats else err)('saaya    eye material "%s" in %s'%(e,mats))
     if a.get('shadow') is None and not a.get('materials') and cid!='saaya':err(cid+': no material rules')
 sj=G.get('assets/vehicles/sedan.glb')

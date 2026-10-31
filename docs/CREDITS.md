@@ -18,3 +18,4 @@
 1. **SAAYA uses a non-commercial model.** If the game will ever be sold, monetised or ad-supported, replace `assets/characters/saaya.glb` (or get the author's permission). Only the licence text embedded in the file was checked.
 2. **CC-BY requires visible attribution.** r2 adds a small credits line to the start screen; a proper credits screen is still needed before release. Modifications (texture resizing, mesh removal, material changes) are allowed under CC-BY but should be noted — they are listed in docs/PHASE1_REPORT.md.
 3. **The village model has no licence information at all.** Find where it came from before publishing.
+- r4: new SAAYA model, taller fence (FENCE_SCALE), lower eye height (EYE_H) -> docs/CHANGES_r4.md

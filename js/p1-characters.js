@@ -316,7 +316,7 @@
       if (rig.hips && rig.head) orient(fix, rig, info); else if (rig.bones.length) info.faceFix = 'none (hips/head bones not found)';
       if (cfg.unlit) convertUnlit(model);
       let eyeMats = null;
-      if (cfg.shadow) eyeMats = makeShadowEntity(model); else applyAppearance(model, cfg);
+      if (cfg.shadow && !P1.config.saaya.ownLook) eyeMats = makeShadowEntity(model); else applyAppearance(model, cfg);   // r4: ownLook = keep the new SAAYA model's own textures
       if (cfg.relax && rig.bones.length && !cfg.anim) relaxArms(rig, model, info);
       if (cfg.shadow && P1.config.saaya.stretch) { const st = P1.config.saaya.stretch; sway.scale.set(st[0], st[1], st[2]); }
 

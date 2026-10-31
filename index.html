@@ -61,6 +61,7 @@ const lamp=new THREE.PointLight(0xffa24a,1.4,12);scene.add(lamp);
 function resize(){renderer.setSize(innerWidth,innerHeight,false);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 
+const EYE_H=1.35,FENCE_SCALE=1.7; // r4: EYE_H = player ki aankh ki ooncha'i (pehle 1.5 m, thoda bada lagta tha); FENCE_SCALE = fence kitni guna ooncha (1 = pehle jaisa)
 let doors=[],nearDoor=null,rootRef=null,vmesh=[],nearV=[],cabinMeshes=[],trees=[],cc=new THREE.Vector3(),ready=false,started=false;
 const pos=new THREE.Vector3(),rc=new THREE.Raycaster();let gy=0,yaw=0,pitch=0,bob=0;
 const keys={},joy={x:0,y:0},DOWN=new THREE.Vector3(0,-1,0);
@@ -100,6 +101,16 @@ function build(gltf){
     const pv=new THREE.Group();pv.position.set(c.x,fix.base,c.z);scene.add(pv);pv.updateMatrixWorld(true);
     pv.attach(cabin);pv.scale.setScalar(HUT_SCALE);pv.position.y+=fix.shift;pv.updateMatrixWorld(true);
     cabin.traverse(o=>{if(o.isMesh)cabinMeshes.push(o)});
+    // r4: baad ki fencing bahut chhoti thi (0.68 m, ghutne tak) -> sirf fence ko oopar se FENCE_SCALE guna lamba karo, neeche ka hissa zameen par wahin rehta hai
+    try{
+      const fm=cabinMeshes.filter(o=>[].concat(o.material).some(m=>m&&m.name==='Fence'));
+      if(fm.length&&FENCE_SCALE!==1){
+        const fb=new THREE.Box3();fm.forEach(o=>fb.expandByObject(o));const fc=fb.getCenter(new THREE.Vector3());
+        const fp=new THREE.Group();fp.position.set(fc.x,fb.min.y,fc.z);scene.add(fp);fp.updateMatrixWorld(true);
+        fm.forEach(o=>fp.attach(o));fp.scale.y=FENCE_SCALE;fp.updateMatrixWorld(true);
+        window.__fenceFix={meshes:fm.length,oldH:+(fb.max.y-fb.min.y).toFixed(3),newH:+((fb.max.y-fb.min.y)*FENCE_SCALE).toFixed(3),scale:FENCE_SCALE};
+      }
+    }catch(e){console.warn('fence scale skipped:',e)}
     new THREE.Box3().setFromObject(cabin).getCenter(cc);
     window.__hutFix=fix;
   }
@@ -179,7 +190,7 @@ function update(dt){
   const gm=cabinMeshes.concat(nearV);if(gm.length){rc.set(new THREE.Vector3(pos.x,gy+0.8,pos.z),DOWN);rc.far=2.5;const h=rc.intersectObjects(gm,false)[0];if(h&&h.point.y>-0.2)tg=Math.max(0,h.point.y)}
   gy+=(tg-gy)*Math.min(1,dt*12);
   bob+=Math.min(1,n)*sp*dt*2.4;
-  cam.position.set(pos.x,gy+1.5+Math.sin(bob)*0.035*Math.min(1,n),pos.z);
+  cam.position.set(pos.x,gy+EYE_H+Math.sin(bob)*0.035*Math.min(1,n),pos.z);
   cam.rotation.set(pitch,yaw,0);
   lamp.intensity=1.2+Math.sin(performance.now()*0.011)*0.25+Math.random()*0.25;
   if(window.P1&&P1.update)P1.update(dt,pos);

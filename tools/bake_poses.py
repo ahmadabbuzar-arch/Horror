@@ -17,8 +17,8 @@ CHAINS = {  # file stem -> per side: (shoulder, upperarm, forearm, hand, hand-ai
                        R=('shoulder.r_081', 'arm_stretch.r_082', 'forearm_stretch.r_083', 'hand.r_084', 'middle1_base.r')),
     'shyamlal': dict(L=('L_shoulder_2_014', 'L_arm_2_015', 'L_elbow_2_016', 'L_wrist_2_017', 'L_middle1'),
                      R=('R_shoulder_2_039', 'R_arm_2_040', 'R_elbow_2_041', 'R_wrist_2_042', 'R_middle1')),
-    'saaya': dict(L=('LeftShoulder_32', 'LeftArm_33', 'LeftForeArm_34', 'LeftHand_35', 'LeftHandMiddle1'),
-                  R=('RightShoulder_5', 'RightArm_6', 'RightForeArm_7', 'RightHand_8', 'RightHandMiddle1')),
+    'saaya': dict(L=('Shoulder_L_07', 'Arm_L_08', 'ForeArm_L_09', 'Hand_L_010', 'Middle1_L_017'),   # r4: new SAAYA model (Darkness of Eclipse ghost)
+                        R=('Shoulder_R_027', 'Arm_R_028', 'ForeArm_R_029', 'Hand_R_030', 'Middle1_R_037')),
 }
 SHOULDER_DROP_DEG = 8.0     # clavicle slopes down
 UPPER_OUT = 0.15            # sideways component of the upper-arm direction (unit vector is normalised afterwards)

@@ -85,7 +85,9 @@
     dev:       { height: 1.72, hide: 'Tongue|Teeth|Occlusion|Tearline|Cornea|Nails',
       headParts: 'Skin_Head|Eyelash|Eye_|Cornea|Teeth|Occlusion|Tearline|Tongue',
       materials: [{ mesh: 'Skin|Eyelash', tint: SKIN }, { mesh: 'Henley|Jeans|Slip', tint: FADED }] },
-    saaya:     { height: 1.95, relax: false, shadow: true, idleRate: 0.55, materials: [] } // look = section 3
+    // r4: SAAYA = new model "Darkness of Eclipse" ghost (own textures, standing pose baked by tools/bake_poses.py). Look knobs: saaya.ownLook below.
+    saaya:     { height: 1.85, relax: false, shadow: true, idleRate: 0.55,
+      materials: [{ mesh: 'Body', tint: [0.85, 0.85, 0.9] }, { mesh: 'Dress', tint: [0.78, 0.78, 0.84] }] }
   };
 
   /* ===================================================================================================
@@ -103,7 +105,8 @@
     // dim, unsettling eyes: small pale-grey glints that flicker slowly (never bright)
     eyeMat: 'material0004', eyeColor: 0x7d8494, eyeDim: 0.55, eyeFlicker: 0.30,
     // proportions that break the "little girl in a dress" read: taller, narrower, a touch longer
-    stretch: [0.80, 1.07, 0.80]
+    stretch: [1, 1, 1],   // r4: new model has its own proportions
+    ownLook: true         // r4: true = use the new model's own textures (tint in appearance.saaya); false = old flat black shadow look
   };
 
   P1.config = { npcs: npcs, placement: placement, appearance: appearance, saaya: saaya, saayaEncounters: saayaEncounters };
