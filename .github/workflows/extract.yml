@@ -1,11 +1,11 @@
 
-name: Extract Horror Game ZIP
+name: Extract Any ZIP File
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - '**/THE_LAST_VILLAGE_Phase1_r2_UNTESTED.zip'
+      - '**/*.zip'
 
 permissions:
   contents: write
@@ -18,25 +18,51 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Find and extract ZIP
+      - name: Find and extract all ZIP files
+        shell: bash
         run: |
-          ZIP=$(find . -type f -name "THE_LAST_VILLAGE_Phase1_r2_UNTESTED.zip" -print -quit)
+          set -e
 
-          if [ -z "$ZIP" ]; then
-            echo "ERROR: ZIP file not found!"
+          mapfile -d '' ZIP_FILES < <(
+            find . -type f -iname "*.zip" \
+              -not -path "./.git/*" \
+              -print0 | sort -z
+          )
+
+          if [ ${#ZIP_FILES[@]} -eq 0 ]; then
+            echo "ERROR: No ZIP files found!"
             exit 1
           fi
 
           TEMP=$(mktemp -d)
 
-          unzip -o "$ZIP" -d "$TEMP"
+          for ZIP in "${ZIP_FILES[@]}"; do
+            echo "Extracting: $ZIP"
 
-          cp -a "$TEMP"/. .
+            mkdir -p "$TEMP/unpack"
+            unzip -o "$ZIP" -d "$TEMP/unpack"
+
+            # Handle ZIPs containing one main project folder
+            shopt -s dotglob nullglob
+            ITEMS=("$TEMP/unpack"/*)
+
+            if [ ${#ITEMS[@]} -eq 1 ] && [ -d "${ITEMS[0]}" ]; then
+              SOURCE="${ITEMS[0]}"
+            else
+              SOURCE="$TEMP/unpack"
+            fi
+
+            cp -a "$SOURCE"/. .
+
+            rm -f "$ZIP"
+            rm -rf "$TEMP/unpack"
+          done
 
           rm -rf "$TEMP"
-          rm -f "$ZIP"
 
-      - name: Commit extracted project
+          echo "All ZIP files extracted successfully!"
+
+      - name: Commit updated project
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -44,9 +70,9 @@ jobs:
           git add -A
 
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "No changes detected."
             exit 0
           fi
 
-          git commit -m "Extract THE LAST VILLAGE Phase 1"
+          git commit -m "Extract and update project from ZIP files"
           git push
