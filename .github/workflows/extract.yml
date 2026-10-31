@@ -1,8 +1,11 @@
 
-name: Extract THE LAST VILLAGE Phase 1
+name: Extract Horror Game ZIP
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - '**/THE_LAST_VILLAGE_Phase1_r2_UNTESTED.zip'
 
 permissions:
   contents: write
@@ -15,22 +18,35 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract ZIP
+      - name: Find and extract ZIP
         run: |
-          mkdir -p extracted
-          unzip -o THE_LAST_VILLAGE_Phase1_r2_UNTESTED.zip -d extracted
+          ZIP=$(find . -type f -name "THE_LAST_VILLAGE_Phase1_r2_UNTESTED.zip" -print -quit)
 
-      - name: Move project files to root
-        run: |
-          shopt -s dotglob
-          cp -a extracted/. .
-          rm -rf extracted
-          rm -f THE_LAST_VILLAGE_Phase1_r2_UNTESTED.zip
+          if [ -z "$ZIP" ]; then
+            echo "ERROR: ZIP file not found!"
+            exit 1
+          fi
 
-      - name: Commit extracted files
+          TEMP=$(mktemp -d)
+
+          unzip -o "$ZIP" -d "$TEMP"
+
+          cp -a "$TEMP"/. .
+
+          rm -rf "$TEMP"
+          rm -f "$ZIP"
+
+      - name: Commit extracted project
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
           git commit -m "Extract THE LAST VILLAGE Phase 1"
           git push
