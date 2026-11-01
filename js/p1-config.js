@@ -122,11 +122,10 @@
     loadRadius: 85, unloadRadius: 125,        // fog hides everything beyond ~65 m, so far props are not even loaded
     props: [
       // wooden watchtower at the far end of the road (landmark visible through the trees). r8: climb:true = its stairs/platform count as walkable floor (player rises with them); wallR = body radius for its wall rays (stair lanes are only 0.95 m wide, the default 0.5 m radius jammed the player at the first step — see tools/sim_tower_climb.py)
-      { id: 'tower',    url: 'assets/props/watchtower.glb',    x: 4.5, z: 72, yaw: 20,  scale: 0.85, sink: 0.0, tint: 0.8, walls: true, climb: true, wallR: 0.3, footprint: 6 },
+      { id: 'tower',    url: 'assets/props/watchtower.glb',    x: 4.5, z: 72, yaw: 20,  scale: 0.85, sink: 0.0, tint: 0.8, walls: true, climb: true, wallR: 0.3, footprint: 6,
+        lift: { top: [0, 0], topY: 8.46, base: [-0.3, -3.3], reach: 6.5 } },   // r9: 'Tower par chadho / Neeche utro' button (local metres; the stairs themselves may still be walked)
       // windmill in the east field
-      { id: 'windmill', url: 'assets/props/windmill.glb',      x: 33, z: 50, yaw: 200, scale: 1.0, sink: 0.05, tint: 0.55, circles: [{ x: 0, z: 0, r: 1.9 }], footprint: 6 },
-      // concrete clinic/bunker with corridors (enterable)
-      { id: 'bunker',   url: 'assets/props/clinic_bunker.glb', x: -27, z: 52, yaw: 90, scale: 1.0, sink: 0.05, tint: 0.85, walls: true, footprint: 14 }
+      { id: 'windmill', url: 'assets/props/windmill.glb',      x: 33, z: 50, yaw: 200, scale: 1.0, sink: 0.05, tint: 0.55, circles: [{ x: 0, z: 0, r: 1.9 }], footprint: 6 }
     ],
     // abandoned cars on the road (same sedan file as the player's car, separate ?query = separate instance so car crumple edits are not shared)
     wrecks: [

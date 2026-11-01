@@ -144,8 +144,37 @@
     P1.props = { list: function () { return entries; } };
   };
 
+  /* r9: guaranteed way up/down the tower: a button near its base (and on the deck). The stairs can still be walked, this is the fallback. */
+  let liftBtn = null, liftMode = null;
+  const toWorld = function (c, lx, lz) { const y = (c.yaw || 0) * DEG, cs = Math.cos(y), sn = Math.sin(y); return { x: c.x + lx * cs + lz * sn, z: c.z - lx * sn + lz * cs }; };
+  function liftUI() {
+    if (liftBtn) return liftBtn;
+    liftBtn = document.createElement('button'); liftBtn.id = 'towerlift';
+    liftBtn.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 150px);z-index:10;background:rgba(43,130,217,.92);color:#fff;border:0;font-weight:700;font-size:14px;padding:8px 16px;border-radius:99px;display:none';
+    liftBtn.onclick = function (ev) {
+      ev.stopPropagation();
+      const e = entries.find(function (q) { return q.c.lift; }); if (!e || !liftMode || !world) return;
+      const L = e.c.lift, up = liftMode === 'up', p = toWorld(e.c, up ? L.top[0] : L.base[0], up ? L.top[1] : L.base[1]);
+      world.pos.set(p.x, 0, p.z); if (world.setGy) world.setGy(up ? L.topY : 0); P1.gy = up ? L.topY : 0;
+      if (world.notify) world.notify(up ? '🪜 Tower ke upar ho' : '🪜 Neeche utar gaye');
+    };
+    document.body.appendChild(liftBtn); return liftBtn;
+  }
+  function liftTick(pos) {
+    const e = entries.find(function (q) { return q.c.lift; });
+    let mode = null;
+    if (e && e.status === 'ready' && e.holder && !(P1.drive && P1.drive.active)) {
+      const L = e.c.lift, d = Math.hypot(pos.x - e.c.x, pos.z - e.c.z), gy = P1.gy || 0;
+      if (gy > 5 && d < 5) mode = 'down'; else if (gy < 2 && d < L.reach) mode = 'up';
+    }
+    if (mode === liftMode && liftBtn) return;
+    liftMode = mode; const b = liftUI();
+    b.style.display = mode ? 'block' : 'none'; b.textContent = mode === 'up' ? '🪜 Tower par chadho' : '🪜 Neeche utro';
+  }
+
   P1.updateProps = function (dt, pos) {
     if (!C) return;
+    try { liftTick(pos); } catch (err) { /* optional UI */ }
     let nearest = null, nd = 1e9;
     for (const e of entries) {
       const d = Math.hypot(pos.x - e.c.x, pos.z - e.c.z);
