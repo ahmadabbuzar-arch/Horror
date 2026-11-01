@@ -126,16 +126,17 @@
       // windmill in the east field
       { id: 'windmill', url: 'assets/props/windmill.glb',      x: 21, z: 28, yaw: 200, scale: 1.0, sink: 0.05, tint: 0.8, circles: [{ x: 0, z: 0, r: 1.9 }], footprint: 6 },
       // ---- r12 GRAVEYARD (west of the village, behind the houses). Centre G = (-42, 38). Entered from the east gate, the domed mausoleum is straight ahead, the skeleton hand rises behind it.
-      // Cluny churchyard photogrammetry scan (31 x 34 m, vertex-coloured, 110k tris). NOT walls:true (its tiles are one big mesh = the player would be boxed in); only the mausoleum is solid.
-      // Dome centre in scan coords (-4.3,-5.2) minus bbox centre (-3.4,-8.95) = local (-0.9, +3.75), radius ~3 m.
-      { id: 'gy_cluny', url: 'assets/props/cluny.glb',              x: -42,   z: 38,   yaw: 0,  scale: 1.0,  sink: 0.1, tint: 0.8,  circles: [{ x: -0.9, z: 3.75, r: 3.0 }], footprint: 16 },
+      // r19: the old Cluny scan is gone. New graveyard = 'Banchory-Ternan watch house' photogrammetry scan (10.3 x 7.2 model units, vertex-coloured, 100k tris), turned 168 deg so the long side runs east-west,
+      // ground flattened to y=0 (tools/prep_scan_color.py -> tools/flatten_scan_ground.py --yaw 168 --cell 1 --blur 1.5). scale 2.4 -> 24.8 x 17.4 m, chapel 5 m, tower 5.4 m. From the east gate the watch-house tower stands straight ahead at the far (west) end, the chapel on the right.
+      // Solid parts (local metres from the scan centre, scale already applied): chapel box + tower circle. Gravestones are not solid.
+      { id: 'gy_banchory', url: 'assets/props/banchory.glb',        x: -37.4, z: 38.5, yaw: 0,  scale: 2.4,  sink: 0.0, baseY: 0, tint: 0.8,  box: { cx: 5.35, cz: 1.05, hx: 3.5, hz: 2.95 }, circles: [{ x: -7.55, z: -0.1, r: 1.85 }], footprint: 12 },
       // wrought-iron gate + pillars + 2 wall wings (9.9 m wide). Front (sign / lamps) = +Z of the model -> yaw 90 faces +X (toward the village road). The 2.6 m gap between the pillars stays open.
-      { id: 'gy_gate',  url: 'assets/props/graveyard_entrance.glb', x: -23.4, z: 38.5, yaw: 90, scale: 1.0,  sink: 0.0, tint: 0.75,
+      { id: 'gy_gate',  url: 'assets/props/graveyard_entrance.glb', x: -23.4, z: 44.5, yaw: 90, scale: 1.0,  sink: 0.0, tint: 0.75,
         circles: [{ x: -1.9, z: 0, r: 0.6 }, { x: 1.9, z: 0, r: 0.6 }, { x: -2.8, z: 0, r: 0.45 }, { x: 2.8, z: 0, r: 0.45 }, { x: -3.6, z: 0, r: 0.45 }, { x: 3.6, z: 0, r: 0.45 }, { x: -4.4, z: 0, r: 0.45 }, { x: 4.4, z: 0, r: 0.45 }], footprint: 4 },
-      // r13 BOUNDARY: gate pillar + wall/railing wing copied round the whole graveyard (rectangle x -61..-23.4, z 17.9..59.1, 41 units), made by tools/make_graveyard_wall.py. One mesh per ~3 units; walls:true = solid (ray collision), the gate gap on the east side belongs to gy_gate.
-      { id: 'gy_wall',  url: 'assets/props/graveyard_wall.glb',     x: -42.2, z: 38.5, yaw: 0,  scale: 1.0,  sink: 0.0, tint: 0.8, walls: true, wallR: 0.5, encloses: true, footprint: 1 },
+      // r13 BOUNDARY: gate pillar + wall/railing wing copied round the whole graveyard (rectangle x -51.4..-23.4, z 27..50 = 28 x 23 m since r19, was 41 x 41 m; gate moved to z 44.5), made by tools/make_graveyard_wall.py. One mesh per ~3 units; walls:true = solid (ray collision), the gate gap on the east side belongs to gy_gate.
+      { id: 'gy_wall',  url: 'assets/props/graveyard_wall.glb',     x: -37.4, z: 38.5, yaw: 0,  scale: 1.0,  sink: 0.0, tint: 0.8, walls: true, wallR: 0.5, encloses: true, footprint: 1 },
       // grave mounds with a skeletal hand (model is 50 units wide / 50 tall -> 0.18 = about 9 m). Ground plane of the original file is cropped away (tools/prep_props.py --crop).
-      { id: 'gy_hand',  url: 'assets/props/graveyard.glb',          x: -66,   z: 38,   yaw: 90, scale: 0.18, sink: 0.3, tint: 0.6,  circles: [{ x: 0, z: 0, r: 3.6 }], footprint: 9 }
+      { id: 'gy_hand',  url: 'assets/props/graveyard.glb',          x: -57,   z: 38,   yaw: 90, scale: 0.18, sink: 0.3, tint: 0.6,  circles: [{ x: 0, z: 0, r: 3.6 }], footprint: 9 }
     ],
     // abandoned cars on the road (same sedan file as the player's car, separate ?query = separate instance so car crumple edits are not shared)
     wrecks: [
@@ -147,7 +148,7 @@
       enabled: true, seed: 7, count: 90, interior: 10,
       area: [-62, 4, 66, 110],                 // x0,z0,x1,z1 where trees may appear
       open: [-14, 8, 38, 80],                  // inner rectangle kept free (village + road + props); `interior` trees are scattered inside anyway
-      keepOut: [[-12, 8, 10, 76], [-72, 14, -18, 64]],   // 2nd rect = graveyard             // never plant here (original village + road)
+      keepOut: [[-12, 8, 10, 76], [-65, 21, -18, 56]],   // 2nd rect = graveyard (r19: smaller)             // never plant here (original village + road)
       hutRadius: 18, minGap: 4.0, scale: [0.85, 1.25], propMargin: 4.5
     }
   };

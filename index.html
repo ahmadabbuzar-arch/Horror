@@ -15,7 +15,8 @@ button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(2
 #go:disabled{opacity:.5}
 #hud{flex-wrap:wrap;justify-content:flex-end;max-width:100%;position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:10px;display:none;gap:6px;z-index:10}
 #hud button{padding:5px 9px;font-size:12px;border-radius:10px;opacity:.8}
-#bl{width:36px;height:36px;padding:0!important;font-size:16px!important;border-radius:50%!important}
+#bl,#bq{width:36px;height:36px;padding:0!important;font-size:16px!important;border-radius:50%!important}
+#gq{margin:12px 0 4px}#gq button{padding:6px 12px;font-size:13px;border-radius:10px;margin:0 2px}#gq button.on{background:var(--ac);color:#150b02;border-color:transparent;font-weight:700}
 .dev{display:none}body.devui .dev{display:inline-block}  /* developer shortcuts: only with ?debug or ?dev in the URL */
 #cross{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:rgba(255,255,255,.55);display:none;z-index:5;pointer-events:none}
 #pad,#look{position:fixed;top:0;bottom:0;z-index:6;display:none}
@@ -28,10 +29,12 @@ button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(2
 </style></head><body>
 <canvas id="c"></canvas><div id="cross"></div>
 <div id="pad"></div><div id="look"></div><div class="j" id="jb"><i id="jk"></i></div>
-<div id="hud"><button id="bv" class="dev">🏘️ Gaon</button><button id="bh" class="dev">🏠 Hut ke andar</button><button id="bw" class="dev">👻 Hut deewar: OFF</button><button id="bl" aria-label="Torch">🔦</button></div>
+<div id="hud"><button id="bv" class="dev">🏘️ Gaon</button><button id="bh" class="dev">🏠 Hut ke andar</button><button id="bw" class="dev">👻 Hut deewar: OFF</button><button id="bl" aria-label="Torch">🔦</button><button id="bq" aria-label="Graphics settings">⚙️</button></div>
 <button id="dr" style="display:none"></button><div id="msg"></div>
 <div id="ov"><div class="card"><h1>🏚️ Horror House</h1>
 <div class="sm" id="st">Scene load ho raha hai…</div>
+<div id="gq" role="group" aria-label="Graphics"><span class="sm">Graphics:</span> <button data-q="high">High</button><button data-q="medium">Medium</button><button data-q="low">Low</button></div>
+<div class="sm" id="gqh" style="margin:-2px 0 6px;font-size:11px;opacity:.6"></div>
 <button id="go" disabled>▶ Khelo</button>
 <div class="sm">PC: WASD chalo · Mouse dekho · Shift daudo · F torch · H hut · G gaon · E door kholo/band karo<br>Mobile: left side joystick · right side swipe se dekho</div>
 <div class="sm" style="margin-top:10px;opacity:.5">v8 · Phase 1 r3 corrections · Hut: “Horror House Scene” by CGS CREATOR (Sketchfab, CC-BY-4.0)</div>
@@ -52,12 +55,39 @@ button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(2
 <script>
 const $=id=>document.getElementById(id);
 const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
-// r16 quality: MSAA on + up to 2x pixel ratio + max anisotropic filtering (sharper textures at an angle). If it lags: add ?pr=1.5 and/or ?aa=0 to the URL.
-const _PR=parseFloat((location.search.match(/[?&]pr=([\d.]+)/)||[])[1])||Math.min(devicePixelRatio,2);
-const renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:!/[?&]aa=0/.test(location.search)});
+// r18 GRAPHICS QUALITY (High / Medium / Low). Saved in localStorage; URL ?q=high|medium|low overrides it. Default: Medium on phones, High on PC.
+// Low/Medium shrink the textures of houses/village/props at load time (GPU memory + bandwidth = the main cause of lag), lower the render resolution and turn off MSAA.
+// Old escape hatches still work and win over the preset: ?pr=1.5  ?aa=0 (or ?aa=1)  ?hq (only on High).
+const QUALITY={
+  high:  {id:'high',  label:'High',   pr:Math.min(devicePixelRatio,2),    aa:true,  aniso:8, envTex:0,   charTex:0},
+  medium:{id:'medium',label:'Medium', pr:Math.min(devicePixelRatio,1.25), aa:false, aniso:4, envTex:512, charTex:1024},
+  low:   {id:'low',   label:'Low',    pr:1,                               aa:false, aniso:1, envTex:256, charTex:512}
+};
+const GQ=(function(){let id=(location.search.match(/[?&]q=(high|medium|low)\b/i)||[])[1];if(id)id=id.toLowerCase();
+  if(!id){try{id=localStorage.getItem('lv_quality')}catch(e){}}
+  if(!QUALITY[id])id=(('ontouchstart' in window)||navigator.maxTouchPoints>0)?'medium':'high';
+  return QUALITY[id]})();
+window.GQ=GQ;
+const _PR=parseFloat((location.search.match(/[?&]pr=([\d.]+)/)||[])[1])||GQ.pr;
+const _AA=/[?&]aa=0/.test(location.search)?false:(/[?&]aa=1/.test(location.search)?true:GQ.aa);
+const renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:_AA});
 renderer.setPixelRatio(_PR);renderer.outputEncoding=THREE.sRGBEncoding;
-const _MAXA=Math.min(8,renderer.capabilities.getMaxAnisotropy());
-(function(){const L=THREE.GLTFLoader.prototype.load;THREE.GLTFLoader.prototype.load=function(u,ok,pr,er){return L.call(this,u,function(g){try{g.scene.traverse(o=>{if(!o.isMesh)return;[].concat(o.material).forEach(m=>{if(!m)return;for(const k of['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap']){const t=m[k];if(t&&t.isTexture&&t.anisotropy<_MAXA)t.anisotropy=_MAXA}})})}catch(e){}ok(g)},pr,er)}})();
+const _MAXA=Math.max(1,Math.min(GQ.aniso,renderer.capabilities.getMaxAnisotropy()));
+// downscale a texture (halving steps, power-of-two) BEFORE its first GPU upload -> less GPU memory, faster mipmaps, less bandwidth
+function _shrinkTex(t,cap){
+  if(!cap||!t||!t.isTexture||(t.userData&&t.userData._gq))return;
+  const im=t.image;if(!im)return;const w=im.naturalWidth||im.width,h=im.naturalHeight||im.height;
+  if(!w||!h||Math.max(w,h)<=cap)return;
+  try{
+    t.userData=t.userData||{};t.userData._gq=1;
+    const k=cap/Math.max(w,h),tw=Math.max(4,Math.pow(2,Math.floor(Math.log2(w*k)+1e-6))),th=Math.max(4,Math.pow(2,Math.floor(Math.log2(h*k)+1e-6)));
+    let src=im,sw=w,sh=h;
+    while(sw>tw||sh>th){const nw=Math.max(tw,Math.ceil(sw/2)),nh=Math.max(th,Math.ceil(sh/2)),c=document.createElement('canvas');c.width=nw;c.height=nh;
+      const x=c.getContext('2d');x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';x.drawImage(src,0,0,nw,nh);src=c;sw=nw;sh=nh}
+    t.image=src;t.needsUpdate=true;
+  }catch(e){console.warn('[quality] texture shrink skipped',e)}
+}
+(function(){const L=THREE.GLTFLoader.prototype.load;THREE.GLTFLoader.prototype.load=function(u,ok,pr,er){const living=/\/(characters|vehicles)\//.test(String(u)),cap=living?GQ.charTex:GQ.envTex;return L.call(this,u,function(g){try{g.scene.traverse(o=>{if(!o.isMesh)return;[].concat(o.material).forEach(m=>{if(!m)return;for(const k of['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap']){const t=m[k];if(!t||!t.isTexture)continue;_shrinkTex(t,cap);if(t.anisotropy!==_MAXA)t.anisotropy=_MAXA}})})}catch(e){}ok(g)},pr,er)}})();
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x06080f);scene.fog=new THREE.FogExp2(0x080b14,0.028);
 const cam=new THREE.PerspectiveCamera(72,1,0.2,170);cam.rotation.order='YXZ';scene.add(cam);
 scene.add(new THREE.HemisphereLight(0x5a6fa8,0x2a2118,0.95));
@@ -99,7 +129,7 @@ function hutGroundFix(root,cabin,b,scale,sink){
 }
 function build(gltf){
   const root=gltf.scene;rootRef=root;scene.add(root);
-  root.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.side=THREE.DoubleSide;if(m.transparent){m.transparent=false;m.alphaTest=0.35}if(m.map)m.map.anisotropy=Math.max(m.map.anisotropy,4)})});
+  root.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.side=THREE.DoubleSide;if(m.transparent){m.transparent=false;m.alphaTest=0.35}if(m.map)m.map.anisotropy=Math.max(m.map.anisotropy,Math.min(4,_MAXA))})});
   const cabin=root.getObjectByName('Cabin8_5');
   if(cabin){ // hut ko insaan ke size ka bana do (original bahut chhota tha)
     const HUT_SCALE=3.6,HUT_SINK=0.03; // HUT_SINK: how far (m) the wall base is embedded in the terrain, so no gap can show
@@ -137,7 +167,7 @@ function hit(o,d,far,ms){rc.set(o,d);rc.far=far;return rc.intersectObjects(ms,fa
 function loadVillage(done){
   try{
     $('st').textContent='Gaon load ho raha hai…';
-    new THREE.GLTFLoader().load(/[?&]hq\b/.test(location.search)?'assets/models/village_hq.glb':'assets/models/village.glb',vg=>{try{placeVillage(vg)}catch(e){console.error(e);$('msg').textContent='Village error: '+e.message}done()},undefined,e=>{console.error(e);$('st').textContent='Village load error (assets/models/village.glb)';done()});
+    new THREE.GLTFLoader().load((GQ.id==='high'&&/[?&]hq\b/.test(location.search))?'assets/models/village_hq.glb':'assets/models/village.glb',vg=>{try{placeVillage(vg)}catch(e){console.error(e);$('msg').textContent='Village error: '+e.message}done()},undefined,e=>{console.error(e);$('st').textContent='Village load error (assets/models/village.glb)';done()});
   }catch(e){console.error(e);done()}
 }
 let villageBox=null; // world-space bounds of the village (used by NPC spawn anchors)
@@ -289,6 +319,17 @@ $('go').onclick=()=>{
   if(touch){$('pad').style.display='block';$('look').style.display='block'}
   else{try{$('c').requestPointerLock()}catch(e){}}
 };
+// r18 graphics selector: choosing a different level saves it and reloads the page (MSAA and texture sizes can only change at load time)
+(function(){
+  const hint={high:'Sabse achhi quality (heavy phones / PC)',medium:'Balanced: textures aadhe, resolution kam',low:'Sabse smooth: house textures bahut kam, AA off'};
+  document.querySelectorAll('#gq button').forEach(b=>{
+    if(b.dataset.q===GQ.id)b.classList.add('on');
+    b.onclick=()=>{const q=b.dataset.q;if(q===GQ.id)return;let saved=true;try{localStorage.setItem('lv_quality',q)}catch(e){saved=false}
+      const u=new URL(location.href);if(saved)u.searchParams.delete('q');else u.searchParams.set('q',q);location.href=u.toString()};
+  });
+  $('gqh').textContent=hint[GQ.id]+' · badalne par game reload hoga';
+  $('bq').onclick=()=>{if(!started)return;started=false;try{document.exitPointerLock()}catch(e){}$('go').textContent='▶ Wapas khelo';$('ov').style.display='flex'};
+})();
 // load
 function p1Ground(x,z){ // floor height under (x,z): same downward ray the player uses, village meshes only
   const p=new THREE.Vector3(x,0.8,z),ms=vmesh.filter(o=>o.userData.box.containsPoint(p));if(!ms.length)return 0;

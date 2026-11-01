@@ -7,7 +7,8 @@ import numpy as np
 sys.path.insert(0, 'tools/preview')
 from glbinfo import load, accessor, walk
 SRC = 'assets/props/graveyard_entrance.glb'; OUT = 'assets/props/graveyard_wall.glb'
-GATE = (-23.4, 38.5); X_E, X_W, Z_S, Z_N = -23.4, -61.0, 17.94, 59.06
+# r19: smaller enclosure (was x -61..-23.4, z 17.94..59.06 = 41 x 41 = 1681 m2) -> 28 x 23 = 644 m2 around the Banchory scan
+GATE = (-23.4, 44.5); X_E, X_W, Z_S, Z_N = -23.4, -51.4, 27.0, 50.0   # gate moved north so the chapel does not block the entrance lane
 js, bn = load(SRC)
 parts = {}
 def fn(i, n, W, path):

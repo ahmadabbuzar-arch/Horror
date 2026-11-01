@@ -27,7 +27,7 @@
         m.side = T.DoubleSide;     // glTF default is single-sided: scans / interiors lose walls and ground when seen from behind (same fix the game applies to the hut)
         m.needsUpdate = true;
         if (m.color && c.tint != null) m.color.multiplyScalar(c.tint);
-        if (m.map && m.map.anisotropy !== undefined) m.map.anisotropy = Math.max(m.map.anisotropy, 2);
+        if (m.map && m.map.anisotropy !== undefined) m.map.anisotropy = Math.max(m.map.anisotropy, Math.min(2, window.GQ ? window.GQ.aniso : 2));
         if (!(m.transparent && m.opacity < 0.05)) hide = false;
       });
       if (hide) o.visible = false;

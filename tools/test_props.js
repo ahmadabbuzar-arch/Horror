@@ -6,7 +6,7 @@ const T={Raycaster:class{set(){}intersectObjects(){return []}},Vector3:V3,Box3:c
 const w={THREE:T,console,location:{search:''},document:{}};w.window=w;w.P1={cfg:{car:{}},log(){},warn(){},info:{},status:{},assets:{}};
 vm.createContext(w);vm.runInContext(fs.readFileSync('js/p1-config.js','utf8'),w);vm.runInContext(fs.readFileSync('js/p1-props.js','utf8'),w);
 const P1=w.P1,C=P1.config.village;
-ok(C.props.length===6&&C.wrecks.length===2,'6 props (tower, windmill, gy_cluny, gy_gate, gy_wall, gy_hand) + 2 wrecks configured');
+ok(C.props.length===6&&C.wrecks.length===2,'6 props (tower, windmill, gy_banchory, gy_gate, gy_wall, gy_hand) + 2 wrecks configured');
 ok(!C.props.some(c=>/bunker/.test(c.id)),'r9: clinic bunker is gone');
 ok(!C.props.some(c=>/house|ruin|boat/.test(c.id)),'r8: American house, ruined log house and boat are gone');
 const tw=C.props.find(c=>c.id==='tower');ok(tw&&tw.climb&&tw.wallR<=0.35,'r8: tower is climbable (climb:true, narrow wall radius)');
