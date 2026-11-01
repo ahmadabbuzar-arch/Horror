@@ -52,8 +52,12 @@ button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(2
 <script>
 const $=id=>document.getElementById(id);
 const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
-const renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:false});
-renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputEncoding=THREE.sRGBEncoding;
+// r16 quality: MSAA on + up to 2x pixel ratio + max anisotropic filtering (sharper textures at an angle). If it lags: add ?pr=1.5 and/or ?aa=0 to the URL.
+const _PR=parseFloat((location.search.match(/[?&]pr=([\d.]+)/)||[])[1])||Math.min(devicePixelRatio,2);
+const renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:!/[?&]aa=0/.test(location.search)});
+renderer.setPixelRatio(_PR);renderer.outputEncoding=THREE.sRGBEncoding;
+const _MAXA=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+(function(){const L=THREE.GLTFLoader.prototype.load;THREE.GLTFLoader.prototype.load=function(u,ok,pr,er){return L.call(this,u,function(g){try{g.scene.traverse(o=>{if(!o.isMesh)return;[].concat(o.material).forEach(m=>{if(!m)return;for(const k of['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap']){const t=m[k];if(t&&t.isTexture&&t.anisotropy<_MAXA)t.anisotropy=_MAXA}})})}catch(e){}ok(g)},pr,er)}})();
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x06080f);scene.fog=new THREE.FogExp2(0x080b14,0.028);
 const cam=new THREE.PerspectiveCamera(72,1,0.2,170);cam.rotation.order='YXZ';scene.add(cam);
 scene.add(new THREE.HemisphereLight(0x5a6fa8,0x2a2118,0.95));
@@ -95,7 +99,7 @@ function hutGroundFix(root,cabin,b,scale,sink){
 }
 function build(gltf){
   const root=gltf.scene;rootRef=root;scene.add(root);
-  root.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.side=THREE.DoubleSide;if(m.transparent){m.transparent=false;m.alphaTest=0.35}if(m.map)m.map.anisotropy=4})});
+  root.traverse(o=>{if(!o.isMesh)return;(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.side=THREE.DoubleSide;if(m.transparent){m.transparent=false;m.alphaTest=0.35}if(m.map)m.map.anisotropy=Math.max(m.map.anisotropy,4)})});
   const cabin=root.getObjectByName('Cabin8_5');
   if(cabin){ // hut ko insaan ke size ka bana do (original bahut chhota tha)
     const HUT_SCALE=3.6,HUT_SINK=0.03; // HUT_SINK: how far (m) the wall base is embedded in the terrain, so no gap can show
@@ -133,7 +137,7 @@ function hit(o,d,far,ms){rc.set(o,d);rc.far=far;return rc.intersectObjects(ms,fa
 function loadVillage(done){
   try{
     $('st').textContent='Gaon load ho raha hai…';
-    new THREE.GLTFLoader().load('assets/models/village.glb',vg=>{try{placeVillage(vg)}catch(e){console.error(e);$('msg').textContent='Village error: '+e.message}done()},undefined,e=>{console.error(e);$('st').textContent='Village load error (assets/models/village.glb)';done()});
+    new THREE.GLTFLoader().load(/[?&]hq\b/.test(location.search)?'assets/models/village_hq.glb':'assets/models/village.glb',vg=>{try{placeVillage(vg)}catch(e){console.error(e);$('msg').textContent='Village error: '+e.message}done()},undefined,e=>{console.error(e);$('st').textContent='Village load error (assets/models/village.glb)';done()});
   }catch(e){console.error(e);done()}
 }
 let villageBox=null; // world-space bounds of the village (used by NPC spawn anchors)

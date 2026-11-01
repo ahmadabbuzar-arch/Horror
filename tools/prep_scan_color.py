@@ -22,10 +22,29 @@ def acc(i):
     else: arr = np.frombuffer(B, dt, ac['count'] * n, off).reshape(ac['count'], n)
     if ac.get('normalized'): arr = arr.astype(np.float64) / np.iinfo(dt).max
     return arr.astype(np.float64)
+def nodemat(n):
+    if 'matrix' in n: return np.array(n['matrix'], float).reshape(4, 4).T
+    T = np.eye(4); R = np.eye(4); S = np.eye(4)
+    if 'translation' in n: T[:3, 3] = n['translation']
+    if 'scale' in n: S[0, 0], S[1, 1], S[2, 2] = n['scale']
+    if 'rotation' in n:
+        x, y, z, w = n['rotation']
+        R[:3, :3] = [[1-2*(y*y+z*z), 2*(x*y-z*w), 2*(x*z+y*w)], [2*(x*y+z*w), 1-2*(x*x+z*z), 2*(y*z-x*w)], [2*(x*z-y*w), 2*(y*z+x*w), 1-2*(x*x+y*y)]]
+    return T @ R @ S
+world = {}   # mesh index -> world matrix
+def rec(ni, M):
+    n = J['nodes'][ni]; W = M @ nodemat(n)
+    if 'mesh' in n: world[n['mesh']] = W
+    for c in n.get('children', []): rec(c, W)
+for r in J['scenes'][J.get('scene', 0)]['nodes']: rec(r, np.eye(4))
 prims = []; total = 0
 for mi, m in enumerate(J['meshes']):
+    W = world[mi]
     for pr in m['primitives']:
         at = pr['attributes']; P = acc(at['POSITION']); N = acc(at['NORMAL']); C = acc(at['COLOR_0'])[:, :3]
+        # BAKE: the game measures a bbox from the per-mesh LOCAL boxes rotated by the node matrix. For a tilted (non axis-aligned) scan that box is far too big
+        # (Cluny: it thought the scan was 21.7 m below ground and lifted it 16 m into the air). Vertices in world space + identity nodes = exact box.
+        P = (np.c_[P, np.ones(len(P))] @ W.T)[:, :3]; N = N @ W[:3, :3].T; N /= np.maximum(np.linalg.norm(N, axis=1, keepdims=True), 1e-9)
         I = acc(pr['indices']).reshape(-1, 3).astype(np.int64) if 'indices' in pr else np.arange(len(P)).reshape(-1, 3)
         total += len(I); prims.append(dict(mi=mi, P=P, N=N, C=C, I=I))
 def cluster(p, s):
@@ -60,11 +79,9 @@ for p in prims:
     J_acc = AC[at['COLOR_0']]; J_acc['normalized'] = True
     ia = add(T.reshape(-1, 1).astype('<u4' if big else '<u2'), 5125 if big else 5123, 'SCALAR', 34963)
     meshes[p['mi']]['primitives'].append({'attributes': at, 'indices': ia, 'material': 0})
-out = {'asset': {'version': '2.0', 'generator': 'tools/prep_scan_color.py'}, 'scene': J.get('scene', 0), 'scenes': J['scenes'], 'nodes': J['nodes'], 'meshes': meshes,
+out = {'asset': {'version': '2.0', 'generator': 'tools/prep_scan_color.py'}, 'scene': J.get('scene', 0), 'scenes': [{'nodes': list(range(len(meshes)))}], 'nodes': [{'name': m['name'] or 'part%d' % i, 'mesh': i} for i, m in enumerate(meshes)], 'meshes': meshes,
        'materials': [{'name': 'Scan', 'doubleSided': True, 'pbrMetallicRoughness': {'baseColorFactor': [1, 1, 1, 1], 'metallicFactor': 0.0, 'roughnessFactor': 1.0}}],
        'accessors': AC, 'bufferViews': BV, 'buffers': [{'byteLength': len(bins)}]}
-for n in out['nodes']:
-    for k in ('camera', 'skin', 'extensions', 'extras'): n.pop(k, None)
 j = json.dumps(out, separators=(',', ':')).encode(); j += b' ' * ((4 - len(j) % 4) % 4)
 while len(bins) % 4: bins.append(0)
 body = struct.pack('<II', len(j), 0x4E4F534A) + j + struct.pack('<II', len(bins), 0x004E4942) + bytes(bins)

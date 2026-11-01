@@ -3,7 +3,7 @@
 | Used as | Title / author | Licence | Source |
 |---|---|---|---|
 | Hut | Horror House Scene Nature Tree And Environment — CGS CREATOR | CC-BY-4.0 | https://sketchfab.com/3d-models/horror-house-scene-nature-tree-and-environment-20eee4e38c91458392eb607190b60499 |
-| Village | **no metadata in the file** — source unknown (came embedded in the original HTML) | **unknown** | — |
+| Village | Old West Town - Asset Pack — NaiveGoblin (found by the user; matches the buildings in village.glb) | **CC0 1.0** | https://naivegoblin.itch.io/old-west-asset-pack |
 | Raghunath | Mechanic Low Poly Character — 00amza | CC-BY-4.0 | https://sketchfab.com/3d-models/mechanic-low-poly-character-81b1d3d665f04345a4c47e5418b8e6ad |
 | Kamla Devi | Old Lady FBX — silran666 | CC-BY-4.0 | https://sketchfab.com/3d-models/old-lady-fbx-72bf09c435aa49aaa8ecf0e979051f12 |
 | Dr. Arvind | Clinical-coat doctor — Innerscene Corp | CC0 1.0 (stated in the file's `asset.copyright`) | innerscene.com |
@@ -21,7 +21,7 @@
 ## Things you must act on
 1. **SAAYA uses a non-commercial model.** If the game will ever be sold, monetised or ad-supported, replace `assets/characters/saaya.glb` (or get the author's permission). Only the licence text embedded in the file was checked.
 2. **CC-BY requires visible attribution.** r2 adds a small credits line to the start screen; a proper credits screen is still needed before release. Modifications (texture resizing, mesh removal, material changes) are allowed under CC-BY but should be noted — they are listed in docs/PHASE1_REPORT.md.
-3. **The village model has no licence information at all.** Find where it came from before publishing.
+3. ~~The village model has no licence information.~~ Source found (NaiveGoblin, CC0) — credit is optional but nice.
 - r4: new SAAYA model, taller fence (FENCE_SCALE), lower eye height (EYE_H) -> docs/CHANGES_r4.md
 - r5: 6 props from user uploads (watchtower, windmill, clinic/bunker; boat wreck, ruined log house and farmstead house were removed in r8). Author/licence unknown for all -> fill in.
 

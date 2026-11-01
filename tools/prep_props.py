@@ -15,6 +15,7 @@ ap.add_argument('src'); ap.add_argument('dst')
 ap.add_argument('--tris', type=int, default=0); ap.add_argument('--tex', type=int, default=1024); ap.add_argument('--lit', action='store_true')
 ap.add_argument('--drop-mat', default='', help='comma list of material names whose primitives are removed')
 ap.add_argument('--crop', default='', help='cx,cz,hx,hz in WORLD units (node transforms applied): keep only triangles whose centre lies in this XZ rectangle')
+ap.add_argument('--ntex', type=int, default=0, help='cap for NON-base-colour textures (normal / metal-rough / occlusion / emissive); 0 = same as --tex. Saves ~75%% of the memory of those.')
 ap.add_argument('--uvq', type=int, default=40, help='UV cells per unit (seam preservation)')
 a = ap.parse_args()
 
@@ -145,10 +146,14 @@ for m in J.get('materials', []):
     if m.get('alphaMode') in ('MASK', 'BLEND'):
         bt = m.get('pbrMetallicRoughness', {}).get('baseColorTexture')
         if bt: alpha_used.add(J['textures'][bt['index']]['source'])
+base_src = set()
+for m in J.get('materials', []):
+    bt = m.get('pbrMetallicRoughness', {}).get('baseColorTexture')
+    if bt: base_src.add(J['textures'][bt['index']]['source'])
 newimgs = []
 for ii, im in enumerate(J.get('images', [])):
     bv = J['bufferViews'][im['bufferView']]; raw = B[bv.get('byteOffset', 0):bv.get('byteOffset', 0) + bv['byteLength']]
-    img = Image.open(io.BytesIO(raw)); w, h = img.size; s = min(1.0, a.tex / max(w, h))
+    img = Image.open(io.BytesIO(raw)); w, h = img.size; cap = a.tex if (ii in base_src or not a.ntex) else min(a.tex, a.ntex); s = min(1.0, cap / max(w, h))
     if s < 1: img = img.resize((max(1, round(w * s)), max(1, round(h * s))), Image.LANCZOS)
     buf = io.BytesIO()
     has_a = ii in alpha_used and (img.mode in ('RGBA', 'LA', 'P')) and img.convert('RGBA').getchannel('A').getextrema()[0] < 250
