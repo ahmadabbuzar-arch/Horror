@@ -56,7 +56,7 @@ for p in prims:
     used = np.unique(T); rm = np.full(len(P), -1, np.int64); rm[used] = np.arange(len(used)); T = rm[T]; tout += len(T)
     big = len(used) > 65535
     at = {'POSITION': add(P[used].astype('<f4'), 5126, 'VEC3', 34962, True), 'NORMAL': add(N[used].astype('<f4'), 5126, 'VEC3', 34962),
-          'COLOR_0': add(np.clip(C[used] * 65535, 0, 65535).astype('<u2'), 5123, 'VEC3', 34962)}
+          'COLOR_0': add(np.c_[np.clip(np.round(C[used] * 255), 0, 255), np.full(len(used), 255)].astype('u1'), 5121, 'VEC4', 34962)}
     J_acc = AC[at['COLOR_0']]; J_acc['normalized'] = True
     ia = add(T.reshape(-1, 1).astype('<u4' if big else '<u2'), 5125 if big else 5123, 'SCALAR', 34963)
     meshes[p['mi']]['primitives'].append({'attributes': at, 'indices': ia, 'material': 0})

@@ -122,16 +122,18 @@
     loadRadius: 85, unloadRadius: 125,        // fog hides everything beyond ~65 m, so far props are not even loaded
     props: [
       // wooden watchtower at the far end of the road (landmark visible through the trees). r8: climb:true = its stairs/platform count as walkable floor (player rises with them); wallR = body radius for its wall rays (stair lanes are only 0.95 m wide, the default 0.5 m radius jammed the player at the first step — see tools/sim_tower_climb.py)
-      { id: 'tower',    url: 'assets/props/watchtower.glb',    x: 13, z: 67, yaw: 20,  scale: 0.85, sink: 0.0, tint: 0.8, walls: true, climb: true, wallR: 0.3, footprint: 6 },
+      { id: 'tower',    url: 'assets/props/watchtower.glb',    x: 13, z: 67, yaw: 20,  scale: 0.85, sink: 0.0, tint: 0.8, walls: true, climb: true, wallR: 0.18, footprint: 6 },
       // windmill in the east field
-      { id: 'windmill', url: 'assets/props/windmill.glb',      x: 21, z: 28, yaw: 200, scale: 1.0, sink: 0.05, tint: 0.55, circles: [{ x: 0, z: 0, r: 1.9 }], footprint: 6 },
+      { id: 'windmill', url: 'assets/props/windmill.glb',      x: 21, z: 28, yaw: 200, scale: 1.0, sink: 0.05, tint: 0.8, circles: [{ x: 0, z: 0, r: 1.9 }], footprint: 6 },
       // ---- r12 GRAVEYARD (west of the village, behind the houses). Centre G = (-42, 38). Entered from the east gate, the domed mausoleum is straight ahead, the skeleton hand rises behind it.
       // Cluny churchyard photogrammetry scan (31 x 34 m, vertex-coloured, 110k tris). NOT walls:true (its tiles are one big mesh = the player would be boxed in); only the mausoleum is solid.
       // Dome centre in scan coords (-4.3,-5.2) minus bbox centre (-3.4,-8.95) = local (-0.9, +3.75), radius ~3 m.
-      { id: 'gy_cluny', url: 'assets/props/cluny.glb',              x: -42,   z: 38,   yaw: 0,  scale: 1.0,  sink: 0.1, tint: 0.5,  circles: [{ x: -0.9, z: 3.75, r: 3.0 }], footprint: 16 },
+      { id: 'gy_cluny', url: 'assets/props/cluny.glb',              x: -42,   z: 38,   yaw: 0,  scale: 1.0,  sink: 0.1, tint: 0.8,  circles: [{ x: -0.9, z: 3.75, r: 3.0 }], footprint: 16 },
       // wrought-iron gate + pillars + 2 wall wings (9.9 m wide). Front (sign / lamps) = +Z of the model -> yaw 90 faces +X (toward the village road). The 2.6 m gap between the pillars stays open.
       { id: 'gy_gate',  url: 'assets/props/graveyard_entrance.glb', x: -23.4, z: 38.5, yaw: 90, scale: 1.0,  sink: 0.0, tint: 0.75,
         circles: [{ x: -1.9, z: 0, r: 0.6 }, { x: 1.9, z: 0, r: 0.6 }, { x: -2.8, z: 0, r: 0.45 }, { x: 2.8, z: 0, r: 0.45 }, { x: -3.6, z: 0, r: 0.45 }, { x: 3.6, z: 0, r: 0.45 }, { x: -4.4, z: 0, r: 0.45 }, { x: 4.4, z: 0, r: 0.45 }], footprint: 4 },
+      // r13 BOUNDARY: gate pillar + wall/railing wing copied round the whole graveyard (rectangle x -61..-23.4, z 17.9..59.1, 41 units), made by tools/make_graveyard_wall.py. One mesh per ~3 units; walls:true = solid (ray collision), the gate gap on the east side belongs to gy_gate.
+      { id: 'gy_wall',  url: 'assets/props/graveyard_wall.glb',     x: -42.2, z: 38.5, yaw: 0,  scale: 1.0,  sink: 0.0, tint: 0.8, walls: true, wallR: 0.5, encloses: true, footprint: 1 },
       // grave mounds with a skeletal hand (model is 50 units wide / 50 tall -> 0.18 = about 9 m). Ground plane of the original file is cropped away (tools/prep_props.py --crop).
       { id: 'gy_hand',  url: 'assets/props/graveyard.glb',          x: -66,   z: 38,   yaw: 90, scale: 0.18, sink: 0.3, tint: 0.6,  circles: [{ x: 0, z: 0, r: 3.6 }], footprint: 9 }
     ],
@@ -145,7 +147,7 @@
       enabled: true, seed: 7, count: 90, interior: 10,
       area: [-62, 4, 66, 110],                 // x0,z0,x1,z1 where trees may appear
       open: [-14, 8, 38, 80],                  // inner rectangle kept free (village + road + props); `interior` trees are scattered inside anyway
-      keepOut: [[-12, 8, 10, 76], [-72, 16, -20, 60]],   // 2nd rect = graveyard             // never plant here (original village + road)
+      keepOut: [[-12, 8, 10, 76], [-72, 14, -18, 64]],   // 2nd rect = graveyard             // never plant here (original village + road)
       hutRadius: 18, minGap: 4.0, scale: [0.85, 1.25], propMargin: 4.5
     }
   };

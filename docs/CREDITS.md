@@ -15,6 +15,7 @@
 | Graveyard scan (gy_cluny) | Old Cluny Churchyard, Aberdeenshire — Douglas Ledingham | **CC-BY-NC-4.0 (NON-COMMERCIAL)** | https://sketchfab.com/3d-models/old-cluny-churchyard-aberdeenshire-c142ae76340b4113b7b3980198e18b4d |
 | Graveyard gate (gy_gate) | Graveyard Entrance — Reydara | CC-BY-4.0 | https://sketchfab.com/3d-models/graveyard-entrance-e0aa0d480159465fa26795c26546a3b6 |
 | Skeleton hand + mounds (gy_hand) | Graveyard — Gurvinder Bal | CC-BY-4.0 | https://sketchfab.com/3d-models/graveyard-5c3e5556ff36488b8dac0cd3ffe223e5 |
+| Windmill | Windmill from the village of Bogdanka, Poland (author: see file metadata) | **CC-BY-NC-4.0 (NON-COMMERCIAL)** | Sketchfab (supplied GLB) |
 | (not used) | Gritty Elderly Man in Leather Jacket — illiadelbilkovich | CC-BY-4.0 | https://sketchfab.com/3d-models/gritty-elderly-man-in-leather-jacket-2ab00e53883847e98d1f6872e6049069 |
 
 ## Things you must act on
@@ -25,3 +26,4 @@
 - r5: 6 props from user uploads (watchtower, windmill, clinic/bunker; boat wreck, ruined log house and farmstead house were removed in r8). Author/licence unknown for all -> fill in.
 
 4. **r12: the Cluny churchyard scan is NON-COMMERCIAL (like SAAYA).** Replace `assets/props/cluny.glb` before any paid/ad-supported release. Modifications: decimated 1.9 M -> 110 k tris, textures dropped, vertex colours kept; gate textures resized; graveyard.glb ground plane cropped.
+5. **r13: the new windmill is also CC-BY-NC-4.0 (non-commercial).** The boundary wall is built from the Graveyard Entrance model (CC-BY-4.0).

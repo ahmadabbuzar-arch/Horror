@@ -42,9 +42,10 @@ def cast(o,d,far):
     tt=f*(e2*q).sum(1)
     m=ok&(u>=0)&(vv>=0)&(u+vv<=1)&(tt>1e-6)&(tt<=far)
     return tt[m].min() if m.any() else None
+HEIGHTS=tuple(float(v) for v in os.environ.get('HEIGHTS','0.55,1.3').split(','))
 DIRS=[(math.sin(i*math.pi/4),0,math.cos(i*math.pi/4)) for i in range(8)]
 def push(x,z,gy,R=0.5):
-    for y in (0.55,1.3):
+    for y in HEIGHTS:
         for d in DIRS:
             h=cast((x,gy+y,z),d,R)
             if h is not None:

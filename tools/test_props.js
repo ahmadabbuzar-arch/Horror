@@ -6,14 +6,14 @@ const T={Raycaster:class{set(){}intersectObjects(){return []}},Vector3:V3,Box3:c
 const w={THREE:T,console,location:{search:''},document:{}};w.window=w;w.P1={cfg:{car:{}},log(){},warn(){},info:{},status:{},assets:{}};
 vm.createContext(w);vm.runInContext(fs.readFileSync('js/p1-config.js','utf8'),w);vm.runInContext(fs.readFileSync('js/p1-props.js','utf8'),w);
 const P1=w.P1,C=P1.config.village;
-ok(C.props.length===5&&C.wrecks.length===2,'5 props (tower, windmill, gy_cluny, gy_gate, gy_hand) + 2 wrecks configured');
+ok(C.props.length===6&&C.wrecks.length===2,'6 props (tower, windmill, gy_cluny, gy_gate, gy_wall, gy_hand) + 2 wrecks configured');
 ok(!C.props.some(c=>/bunker/.test(c.id)),'r9: clinic bunker is gone');
 ok(!C.props.some(c=>/house|ruin|boat/.test(c.id)),'r8: American house, ruined log house and boat are gone');
 const tw=C.props.find(c=>c.id==='tower');ok(tw&&tw.climb&&tw.wallR<=0.35,'r8: tower is climbable (climb:true, narrow wall radius)');
 for(const c of C.props.concat(C.wrecks))ok(fs.existsSync(c.url.split('?')[0]),'asset exists: '+c.url);
 // ids unique, positions distinct and not inside each other's footprint
 const all=C.props.concat(C.wrecks);ok(new Set(all.map(c=>c.id)).size===all.length,'unique ids');
-let clash=0;for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++){const a=all[i],b=all[j];if(Math.hypot(a.x-b.x,a.z-b.z)<(a.footprint||3)+(b.footprint||3)-2){clash++;console.log('   overlap',a.id,b.id)}}
+let clash=0;for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++){const a=all[i],b=all[j];if(a.encloses||b.encloses)continue;if(Math.hypot(a.x-b.x,a.z-b.z)<(a.footprint||3)+(b.footprint||3)-2){clash++;console.log('   overlap',a.id,b.id)}}
 ok(clash===0,'no two props overlap');
 // collision: inject fake ready entries
 P1.startProps({scene:{add(){},remove(){}},cc:{x:0,z:0},trees:[],root:()=>null});

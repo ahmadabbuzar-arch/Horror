@@ -9,3 +9,9 @@ West of the village (behind the houses), centre (-42, 38):
 * tools/test_props.js: prop count 2 -> 5 (all 18 checks pass; npm-less Node tests only, no rendering proof).
 Tunables: js/p1-config.js (x/z/yaw/scale/tint of the three entries). If the hand looks too big/small change `scale` (0.18). If the scan looks too bright at night lower `tint` (0.5).
 Licence: **Cluny scan is CC-BY-NC-4.0 (non-commercial)** — see docs/CREDITS.md.
+
+## r13 (after first phone test)
+* Phone screenshots: the gate stood alone in an empty field and the Cluny scan was not visible; the windmill texture looked dull with black holes.
+* **Boundary**: `gy_wall` (graveyard_wall.glb, tools/make_graveyard_wall.py) = the gate's pillar + wall/railing wing copied 41x round a rectangle x -61..-23.4, z 17.9..59.1. Solid (walls:true). Whole Cluny scan is inside.
+* **Cluny**: colours were stored as 16-bit RGB (not 4-byte aligned) — now 8-bit RGBA, the standard layout; tint 0.5 -> 0.8 (it may simply have been black on the dark night). If it is STILL missing, open `?debug` and send the `prop:gy_cluny` line.
+* **Windmill**: replaced by windmill_from_the_village_of_bogdanka_poland.glb (CC-BY-NC-4.0), 300k -> 120k tris, texture 1024 (the file's own size; it cannot be sharper than that). The old black holes came from the old decimation. tint 0.55 -> 0.8.
