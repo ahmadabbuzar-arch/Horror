@@ -12,6 +12,9 @@
 | Dev | Man — Mcyborg | CC-BY-4.0 | https://sketchfab.com/3d-models/man-d91475da67924946b3b454daa17639a3 |
 | SAAYA | Horror Girl — LostBoyz2078 | **CC-BY-NC-4.0 (NON-COMMERCIAL)** | https://sketchfab.com/3d-models/horror-girl-cd5dae2513fb45619fbbbb83c1bd27a7 |
 | Player's car | Abandoned Generic Sedan 1 – Game Ready — Rashad Ibrahimli | CC-BY-4.0 | https://sketchfab.com/3d-models/abandoned-generic-sedan-1-game-ready-6a2169dafc254f399387a679305bb1bf |
+| Graveyard scan (gy_cluny) | Old Cluny Churchyard, Aberdeenshire — Douglas Ledingham | **CC-BY-NC-4.0 (NON-COMMERCIAL)** | https://sketchfab.com/3d-models/old-cluny-churchyard-aberdeenshire-c142ae76340b4113b7b3980198e18b4d |
+| Graveyard gate (gy_gate) | Graveyard Entrance — Reydara | CC-BY-4.0 | https://sketchfab.com/3d-models/graveyard-entrance-e0aa0d480159465fa26795c26546a3b6 |
+| Skeleton hand + mounds (gy_hand) | Graveyard — Gurvinder Bal | CC-BY-4.0 | https://sketchfab.com/3d-models/graveyard-5c3e5556ff36488b8dac0cd3ffe223e5 |
 | (not used) | Gritty Elderly Man in Leather Jacket — illiadelbilkovich | CC-BY-4.0 | https://sketchfab.com/3d-models/gritty-elderly-man-in-leather-jacket-2ab00e53883847e98d1f6872e6049069 |
 
 ## Things you must act on
@@ -20,3 +23,5 @@
 3. **The village model has no licence information at all.** Find where it came from before publishing.
 - r4: new SAAYA model, taller fence (FENCE_SCALE), lower eye height (EYE_H) -> docs/CHANGES_r4.md
 - r5: 6 props from user uploads (watchtower, windmill, clinic/bunker; boat wreck, ruined log house and farmstead house were removed in r8). Author/licence unknown for all -> fill in.
+
+4. **r12: the Cluny churchyard scan is NON-COMMERCIAL (like SAAYA).** Replace `assets/props/cluny.glb` before any paid/ad-supported release. Modifications: decimated 1.9 M -> 110 k tris, textures dropped, vertex colours kept; gate textures resized; graveyard.glb ground plane cropped.

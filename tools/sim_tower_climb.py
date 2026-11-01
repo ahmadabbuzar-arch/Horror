@@ -82,6 +82,7 @@ if __name__=='__main__':
             if math.hypot(px-nx,pz-nz)>0.1: continue
             tg=ground(px,pz,gy)
             if tg>gy and tg-gy>1.0: continue
+            if gy>1.0 and tg<gy-float(os.environ.get('MAXDROP','99')): continue
             k=key(px,pz,tg)
             if k in seen: continue
             seen[k]=(px,pz,tg,(x,z,gy)); heapq.heappush(q,(prio(px,pz,tg),(px,pz,tg)))

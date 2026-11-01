@@ -1,4 +1,4 @@
-*** r9 BUILD — bunker removed, tower lift button (on top of r8 car/tower fixes); needs phone test (see docs/CHANGES_r9.md) ***
+*** r12 BUILD — graveyard added (Cluny churchyard + gate + skeleton hand), see docs/CHANGES_r12.md; NOT tested in a browser ***
 No Three.js / network in the build sandbox. Verified offline: JS syntax, node tools/test_p1_logic.js (33), node tools/test_hut_ground.js (13),
 python3 tools/check_assets.py, and offline preview renders in screenshots/ (own renderer, NOT the game).
 Details + remaining issues: docs/CORRECTION_REPORT_r3.md
