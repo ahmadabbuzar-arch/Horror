@@ -11,7 +11,7 @@
   for (let i = 0; i < 8; i++) DIRS.push(new T.Vector3(Math.sin(i * Math.PI / 4), 0, Math.cos(i * Math.PI / 4)));
 
   function mkEntry(c) {
-    return { c: c, id: c.id, status: 'idle', holder: null, meshes: [], box: null, loadedAt: 0 };
+    return { c: c, id: c.id, status: 'idle', holder: null, meshes: [], floors: [], box: null, loadedAt: 0 };
   }
 
   /* ---------- build one loaded prop ---------- */
@@ -43,13 +43,14 @@
     holder.position.set(c.x, -(c.sink || 0), c.z); holder.rotation.y = (c.yaw || 0) * DEG;
     world.scene.add(holder); holder.updateMatrixWorld(true);
     e.holder = holder; e.scale = s;
-    e.meshes = [];
+    e.meshes = []; e.floors = [];
     const wb = new T.Box3(), tmp = new T.Box3();
     model.traverse(function (o) {
       if (!o.isMesh || !o.visible) return;
       if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
       tmp.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
       wb.union(tmp);
+      if (c.climb) e.floors.push(o);     // r8: stairs / platforms the player can stand on (see P1.propFloors)
       if (c.walls) {
         const d = tmp.getSize(new T.Vector3());
         if (d.y < 1.2 && Math.max(d.x, d.z) > 6) return;     // flat ground-like mesh: not a wall
@@ -64,7 +65,7 @@
   function unload(e, why) {
     if (e.holder) { world.scene.remove(e.holder); e.holder = null; }   // geometry/materials are freed by the asset manager
     P1.assets.release(e.c.url);
-    e.meshes = []; e.box = null; e.status = 'idle';
+    e.meshes = []; e.floors = []; e.box = null; e.status = 'idle';
     P1.status['prop:' + e.id] = 'idle (' + why + ')';
   }
 
@@ -155,6 +156,17 @@
     if (nearest && !busy) load(nearest);
   };
 
+  /* r8: meshes the player may stand on (tower stairs + platform). index.html adds them to its downward floor ray. */
+  P1.propFloors = function (pos) {
+    const out = [];
+    for (const e of entries) {
+      if (e.status !== 'ready' || !e.holder || !e.floors || !e.floors.length || !e.box) continue;
+      if (pos.x < e.box.min.x || pos.x > e.box.max.x || pos.z < e.box.min.z || pos.z > e.box.max.z) continue;
+      for (const m of e.floors) out.push(m);
+    }
+    return out;
+  };
+
   const _o = new T.Vector3();
   P1.collideProps = function (pos, rad) {
     if (!C) return;
@@ -178,10 +190,12 @@
       }
       if (hit) { pos.x = c.x + px * cs + pz * sn; pos.z = c.z - px * sn + pz * cs; }
       if (c.walls && e.meshes.length && e.box && e.box.containsPoint(_o.set(pos.x, 1, pos.z))) {
-        for (const y of [0.55, 1.3]) for (const d of DIRS) {
-          rc.set(_o.set(pos.x, y, pos.z), d); rc.far = 0.5;
+        const R = c.wallR || 0.5;   // r8: per-prop body radius for the wall rays
+        const gy = P1.gy || 0;   // r8: rays start at the player's CURRENT floor height (on the tower stairs the old fixed 0.55 m / 1.3 m rays hit the next steps and blocked the climb)
+        for (const y of [gy + 0.55, gy + 1.3]) for (const d of DIRS) {
+          rc.set(_o.set(pos.x, y, pos.z), d); rc.far = R;
           const h = rc.intersectObjects(e.meshes, false)[0];
-          if (h) { const push = 0.5 - h.distance; pos.x -= d.x * push; pos.z -= d.z * push; }
+          if (h) { const push = R - h.distance; pos.x -= d.x * push; pos.z -= d.z * push; }
         }
       }
     }

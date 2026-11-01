@@ -7,10 +7,11 @@
   const CFG = P1.cfg.drive = {
     maxFwd: 13, maxRev: 4, acc: 5, brake: 10, drag: 1.2,   // m/s, m/s, m/s^2 ...   (13 m/s = 47 km/h; the car is a crashed wreck, keep it slow)
     wheelBase: 2.7, maxSteer: 0.55,                         // metres, radians
-    seat: [-0.42, 1.12, 0.2],                               // driver seat in car-local metres (model front +Z, driver on -X = right-hand side)
-    enterDist: 3.6, radius: 1.15, bumpers: 2.4
+    seat: [0.37, 1.12, -0.1],                               // r8: driver seat in car-local metres (model front +Z). The steering wheel (Object_9) is at x=+0.37, y=0.78, z=0.43 => driver on +X (the old seat was on -X = passenger side)
+    enterDist: 3.4, radius: 1.15, bumpers: 2.4,             // enterDist: max distance to the DRIVER door
+    doorMs: 600, closeAfterMs: 2500                         // door swing time before sitting down; auto-close delay after getting out
   };
-  const D = P1.drive = { active: false, v: 0, h: 0, steer: 0, off: 0, lastYaw: NaN };
+  const D = P1.drive = { active: false, pending: false, v: 0, h: 0, steer: 0, off: 0, lastYaw: NaN };
   let btn = null, au = null;
   const ang = function (a) { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
   const ok = function () { return P1.car && P1.car.ready && P1.car.holder; };
@@ -45,32 +46,55 @@
     } catch (e) { /* audio is optional */ }
   }
 
+  // r8: the driver door (front door on the +X side). Falls back to the car centre if the model has no such door.
+  function doorPos() {
+    const car = P1.car, dd = car.driverDoor;
+    if (dd && car.syncDoors) { car.syncDoors(); return { x: dd.state.x, z: dd.state.z }; }
+    return { x: car.holder.position.x, z: car.holder.position.z };
+  }
+  function distToDoor(pos) { const d = doorPos(); return Math.hypot(pos.x - d.x, pos.z - d.z); }
+  function setDoor(t) { const dd = P1.car.driverDoor; if (dd) dd.state.t = t; }
+  function doorOpen() { const dd = P1.car.driverDoor; return !dd || dd.state.cur > 0.55; }
+
+  function sitDown(w) {
+    const H = P1.car.holder;
+    D.pending = false; D.active = true; D.v = 0; D.steer = 0; D.h = H.rotation.y; D.off = 0; D.lastYaw = NaN;
+    P1.car.circles = []; if (P1.car.setHood) P1.car.setHood(0);
+    w.pos.set(H.position.x, 0, H.position.z);
+    setDoor(0);   // door closes behind the driver
+    if (w.notify) w.notify('🚗 Driver seat par baith gaye — joystick/WASD se chalao, utarne ke liye button/C');
+    refresh(w.pos);
+  }
   function toggle() {
-    if (!ok() || !P1.world) return;
+    if (!ok() || !P1.world || D.pending) return;
     const w = P1.world, H = P1.car.holder;
     if (!D.active) {
-      if (Math.hypot(w.pos.x - H.position.x, w.pos.z - H.position.z) > CFG.enterDist) return;
-      D.active = true; D.v = 0; D.steer = 0; D.h = H.rotation.y; D.off = 0; D.lastYaw = NaN;
-      P1.car.circles = []; if (P1.car.setHood) P1.car.setHood(0);
-      w.pos.set(H.position.x, 0, H.position.z);
-      if (w.notify) w.notify('🚗 Car mein baith gaye — joystick/WASD se chalao, utarne ke liye button/C');
+      if (distToDoor(w.pos) > CFG.enterDist) { if (w.notify) w.notify('🚪 Driver door ke paas jao (car ke dayein/driver side)'); return; }
+      if (doorOpen()) { sitDown(w); return; }                  // door already open -> get in
+      D.pending = true; setDoor(1);                            // door closed -> open it first, then get in
+      if (w.notify) w.notify('🚪 Door khul raha hai…');
+      setTimeout(function () { try { sitDown(w); } catch (e) { D.pending = false; console.error('[P1] sitDown', e); } }, CFG.doorMs);
     } else {
       D.active = false; D.v = 0; engine(false, 0);
       const s = Math.sin(D.h), c = Math.cos(D.h);
-      w.pos.set(H.position.x - c * 1.9 + s * 0.2, 0, H.position.z + s * 1.9 + c * 0.2);   // driver side (-X in car space)
+      setDoor(1);                                              // open the driver door, step out on the driver side (+X in car space)
+      w.pos.set(H.position.x + c * 1.9 + s * 0.2, 0, H.position.z - s * 1.9 + c * 0.2);
       if (P1.car.setHood) P1.car.setHood(P1.cfg.car.hoodDeg || 0);
       circles();
+      if (P1.car.syncDoors) P1.car.syncDoors();
+      setTimeout(function () { if (!D.active) setDoor(0); }, CFG.closeAfterMs);
     }
     refresh(w.pos);
   }
   function refresh(pos) {
     const b = ui();
     if (!ok()) { b.style.display = 'none'; return; }
-    const near = Math.hypot(pos.x - P1.car.holder.position.x, pos.z - P1.car.holder.position.z) < CFG.enterDist;
+    const near = !D.pending && distToDoor(pos) < CFG.enterDist;   // r8: measured to the driver door, not the car centre
     b.style.display = (D.active || near) ? 'block' : 'none';
     if (D.active || near) b.textContent = D.active ? '🚪 Car se utro' + ('ontouchstart' in window ? '' : ' (C)') : '🚗 Car chalao' + ('ontouchstart' in window ? '' : ' (C)');
   }
   P1.driveUI = function (pos) { refresh(pos); };
+  D.toggle = toggle;   // exported for tools/test_drive.js
 
   // f = throttle (+forward), s = steering (+right), trees = game's tree circles, blocked(x,z,dx,dz,len) = building/hut ray test from index.html
   D.step = function (dt, f, s, pos, trees, yaw, blocked) {
@@ -95,6 +119,7 @@
     q.x = Math.max(-148, Math.min(148, q.x)); q.z = Math.max(-148, Math.min(148, q.z));
     D.v = v;
     H.position.set(q.x, 0, q.z); H.rotation.y = D.h; pos.set(q.x, 0, q.z);
+    if (P1.car.syncDoors) P1.car.syncDoors();
     // look around a little with the right thumb, then drift back to looking ahead
     const base = D.h + Math.PI;
     if (isNaN(D.lastYaw)) D.off = ang(yaw - base);

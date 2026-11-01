@@ -199,7 +199,7 @@
     // hook the car doors into the game's existing door interaction (button / E key)
     doors.forEach(function (d) {
       const c = new T.Box3().setFromObject(d.node).getCenter(new T.Vector3());
-      d.state.x = c.x; d.state.z = c.z; w.addDoor(d.state);
+      d.state.x = c.x; d.state.z = c.z; d.local = holder.worldToLocal(c.clone()); w.addDoor(d.state);   // r8: d.local lets the door button follow the car after it has been driven away
     });
     // 3 circle colliders along the car's axis (same push-out style as the game's tree collision)
     const fx = Math.sin(cfg.yaw), fz = Math.cos(cfg.yaw);
@@ -209,6 +209,9 @@
     car.ready = true; car.holder = holder; car.model = model; car.scaleGroup = sc; car.parts = parts; car.circles = circles;
     car.doors = doors; car.lamps = lamps; car.scale = s; car.wheelReport = wheelReport;
     car.wheels = { frontNegX: corner['F-X'] && corner['F-X'].node, frontPosX: corner['F+X'] && corner['F+X'].node, rearNegX: corner['R-X'] && corner['R-X'].node, rearPosX: corner['R+X'] && corner['R+X'].node };
+    // r8: the steering wheel (node Object_9) sits on the +X side of the model => the DRIVER door is the front door on +X
+    car.driverDoor = doors.filter(function (d) { return d.side > 0; }).sort(function (a, b) { return b.frontZ - a.frontZ; })[0] || null;
+    car.syncDoors = function () { doors.forEach(function (d) { if (!d.local) return; holder.updateMatrixWorld(true); const p = holder.localToWorld(d.local.clone()); d.state.x = p.x; d.state.z = p.z; }); };
     car.setDoor = function (i, v) { const d = doors[i]; if (d) { d.state.t = v; } };
     car.setHood = function (deg) { if (hoodPivot) hoodPivot.rotation.x = -deg * DEG; };
     car.setTrunk = function (deg) { if (trunkPivot) trunkPivot.rotation.x = deg * DEG; };

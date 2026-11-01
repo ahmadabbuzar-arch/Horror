@@ -198,10 +198,11 @@ function update(dt){
   step((-sn*f+cs*s)*sp*dt,0);step(0,(-cs*f-sn*s)*sp*dt);
   for(const t of trees){const dx=pos.x-t.x,dz=pos.z-t.z,d=Math.hypot(dx,dz),m=t.r+0.35;if(d<m&&d>1e-4){pos.x=t.x+dx/d*m;pos.z=t.z+dz/d*m}}
   }
-  if(window.P1&&P1.collide)P1.collide(pos);
+  if(window.P1){P1.gy=gy;if(P1.collide)P1.collide(pos)}   // r8: P1.gy = current floor height (tower stairs)
   pos.x=Math.max(-150,Math.min(150,pos.x));pos.z=Math.max(-150,Math.min(150,pos.z));
   let tg=0;
-  const gm=cabinMeshes.concat(nearV);if(!drv&&gm.length){rc.set(new THREE.Vector3(pos.x,gy+0.8,pos.z),DOWN);rc.far=2.5;const h=rc.intersectObjects(gm,false)[0];if(h&&h.point.y>-0.2)tg=Math.max(0,h.point.y)}
+  let pf=[];try{if(!drv&&window.P1&&P1.propFloors)pf=P1.propFloors(pos)}catch(e){}
+  const gm=cabinMeshes.concat(nearV,pf);   // r8: + tower stairs/platformif(!drv&&gm.length){rc.set(new THREE.Vector3(pos.x,gy+0.8,pos.z),DOWN);rc.far=2.5;const h=rc.intersectObjects(gm,false)[0];if(h&&h.point.y>-0.2)tg=Math.max(0,h.point.y)}
   gy+=(tg-gy)*Math.min(1,dt*12);
   bob+=Math.min(1,n)*sp*dt*2.4;
   cam.position.set(pos.x,gy+EYE_H+Math.sin(bob)*0.035*Math.min(1,n),pos.z);

@@ -121,16 +121,10 @@
   const village = {
     loadRadius: 85, unloadRadius: 125,        // fog hides everything beyond ~65 m, so far props are not even loaded
     props: [
-      // farmstead lot (house with interior, yard wall, path, road strip). Cropped from the 28x63 m scan; 1 unit = 1 cm. Lot front = +Z -> yaw -90 faces the village road.
-      { id: 'house',    url: 'assets/props/vintage_house.glb', x: 21, z: 27, yaw: -90, scale: 0.01, baseY: 172, sink: 0.04, tint: 0.8, walls: true, footprint: 15 },
-      // ruined log house (photo-scan, ground patch included; r6: kept at full 100k tris - decimation shredded the planks)
-      { id: 'ruin',     url: 'assets/props/ruined_house.glb',  x: 16, z: 54, yaw: -70, scale: 0.32, sink: 0.12, tint: 0.55, box: { cx: 0, cz: 0, hx: 5.6, hz: 5.4 }, footprint: 10 },
-      // wooden watchtower at the far end of the road (landmark visible through the trees)
-      { id: 'tower',    url: 'assets/props/watchtower.glb',    x: 4.5, z: 72, yaw: 20,  scale: 0.85, sink: 0.0, tint: 0.8, walls: true, footprint: 6 },
+      // wooden watchtower at the far end of the road (landmark visible through the trees). r8: climb:true = its stairs/platform count as walkable floor (player rises with them); wallR = body radius for its wall rays (stair lanes are only 0.95 m wide, the default 0.5 m radius jammed the player at the first step — see tools/sim_tower_climb.py)
+      { id: 'tower',    url: 'assets/props/watchtower.glb',    x: 4.5, z: 72, yaw: 20,  scale: 0.85, sink: 0.0, tint: 0.8, walls: true, climb: true, wallR: 0.3, footprint: 6 },
       // windmill in the east field
       { id: 'windmill', url: 'assets/props/windmill.glb',      x: 33, z: 50, yaw: 200, scale: 1.0, sink: 0.05, tint: 0.55, circles: [{ x: 0, z: 0, r: 1.9 }], footprint: 6 },
-      // boat wreck on its mud slab (west field). The slab is sunk so only its top shows.
-      { id: 'boat',     url: 'assets/props/boat_wreck.glb',    x: -21, z: 29, yaw: 60, scale: 0.55, sink: 0.9, tint: 0.55, circles: [{ x: -1.8, z: 0.4, r: 1.6 }, { x: 0.6, z: 0, r: 1.8 }, { x: 3, z: -0.4, r: 1.5 }], footprint: 8 },
       // concrete clinic/bunker with corridors (enterable)
       { id: 'bunker',   url: 'assets/props/clinic_bunker.glb', x: -27, z: 52, yaw: 90, scale: 1.0, sink: 0.05, tint: 0.85, walls: true, footprint: 14 }
     ],
