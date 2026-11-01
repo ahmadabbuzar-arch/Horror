@@ -26,7 +26,9 @@
         if (!m) return;
         m.side = T.DoubleSide;     // glTF default is single-sided: scans / interiors lose walls and ground when seen from behind (same fix the game applies to the hut)
         m.needsUpdate = true;
-        if (m.color && c.tint != null) m.color.multiplyScalar(c.tint);
+        // r25 FIX: tint only ONCE per material. cemetery.glb / cemetery_fence.glb (and other props) share ONE material between all meshes (and cached GLBs are re-built after unload/reload),
+        // so multiplying per mesh gave 0.8^30 = ~0 -> graves + fence came out pitch black ('no textures'). userData flag = apply once.
+        if (m.color && c.tint != null && !(m.userData && m.userData._p1tint)) { m.color.multiplyScalar(c.tint); m.userData = m.userData || {}; m.userData._p1tint = 1; }
         if (m.map && m.map.anisotropy !== undefined) m.map.anisotropy = Math.max(m.map.anisotropy, Math.min(2, window.GQ ? window.GQ.aniso : 2));
         if (!(m.transparent && m.opacity < 0.05)) hide = false;
       });

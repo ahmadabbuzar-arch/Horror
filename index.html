@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="hi"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#05070d">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Horror House – First Person</title>
 <style>
 :root{--bg:#05070d;--fg:#e8e6df;--ac:#d9822b;--pn:rgba(10,12,20,.82);color-scheme:dark;box-sizing:border-box}
@@ -26,7 +30,12 @@ button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(2
 #dr{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 56px);z-index:10;background:rgba(217,130,43,.92);color:#150b02;border:0;font-weight:700;font-size:14px;padding:8px 16px;border-radius:999px;box-shadow:0 2px 10px rgba(0,0,0,.5);animation:prm .18s ease-out}
 @keyframes prm{from{opacity:0;transform:translateX(-50%) translateY(6px)}to{opacity:1;transform:translateX(-50%)}}
 #msg{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);text-align:center;font-size:12px;opacity:.65;z-index:8;pointer-events:none}
+#rot{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;flex-direction:column;background:#05070d;text-align:center;font-size:18px;gap:10px}
+#rot b{font-size:56px;display:inline-block;animation:rotp 1.6s ease-in-out infinite}
+@keyframes rotp{0%,30%{transform:rotate(0)}70%,100%{transform:rotate(-90deg)}}
+body.portrait #rot{display:flex}
 </style></head><body>
+<div id="rot"><b>📱</b><div>Phone ko <b style="font-size:inherit;animation:none">landscape</b> me ghumao</div><div class="sm">Game sirf landscape me chalta hai</div></div>
 <canvas id="c"></canvas><div id="cross"></div>
 <div id="pad"></div><div id="look"></div><div class="j" id="jb"><i id="jk"></i></div>
 <div id="hud"><button id="bv" class="dev">🏘️ Gaon</button><button id="bh" class="dev">🏠 Hut ke andar</button><button id="bw" class="dev">👻 Hut deewar: OFF</button><button id="bl" aria-label="Torch">🔦</button><button id="bq" aria-label="Graphics settings">⚙️</button></div>
@@ -44,6 +53,7 @@ button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(2
 <!-- offline fallback: put three.min.js (r128) and GLTFLoader.js (r128) into vendor/ -->
 <script>window.THREE||document.write('<script src="vendor/three.min.js"><\/script>')</script>
 <script>(window.THREE&&THREE.GLTFLoader)||document.write('<script src="vendor/GLTFLoader.js"><\/script>')</script>
+<script src="js/atmo.js"></script>
 <script src="js/p1-core.js"></script>
 <script src="js/p1-ground.js"></script>
 <script src="js/p1-config.js"></script>
@@ -89,6 +99,7 @@ function _shrinkTex(t,cap){
 }
 (function(){const L=THREE.GLTFLoader.prototype.load;THREE.GLTFLoader.prototype.load=function(u,ok,pr,er){const living=/\/(characters|vehicles)\//.test(String(u)),cap=living?GQ.charTex:GQ.envTex;return L.call(this,u,function(g){try{g.scene.traverse(o=>{if(!o.isMesh)return;[].concat(o.material).forEach(m=>{if(!m)return;for(const k of['map','normalMap','roughnessMap','metalnessMap','aoMap','emissiveMap']){const t=m[k];if(!t||!t.isTexture)continue;_shrinkTex(t,cap);if(t.anisotropy!==_MAXA)t.anisotropy=_MAXA}})})}catch(e){}ok(g)},pr,er)}})();
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x06080f);scene.fog=new THREE.FogExp2(0x080b14,0.028);
+try{window.ATMO&&ATMO.init(scene,GQ,renderer)}catch(e){console.warn('atmo',e)}   // r26: night sky, stars, moon, creepy mist
 const cam=new THREE.PerspectiveCamera(72,1,0.2,170);cam.rotation.order='YXZ';scene.add(cam);
 scene.add(new THREE.HemisphereLight(0x5a6fa8,0x2a2118,0.95));
 const moon=new THREE.DirectionalLight(0x9fb2ff,0.7);moon.position.set(-20,40,10);scene.add(moon);
@@ -286,7 +297,7 @@ function update(dt){
   if(window.P1&&P1.update)P1.update(dt,pos);
 }
 let last=performance.now();
-(function loop(t){requestAnimationFrame(loop);if(!ready)return;const dt=Math.min(0.05,(t-last)/1000);last=t;if(started)update(dt);renderer.render(scene,cam)})(0);
+(function loop(t){requestAnimationFrame(loop);if(!ready)return;const dt=Math.min(0.05,(t-last)/1000);last=t;if(started)update(dt);if(window.ATMO)ATMO.update(dt,t/1000,cam,gy,nearV.length>0);renderer.render(scene,cam)})(0);
 
 function goHut(){if(!cabinMeshes.length)return;pos.set(cc.x,0,cc.z);gy=0;$('msg').textContent='Hut ke andar ho. Bahar nikalne ke liye darwaza dhoondo 🚪';setTimeout(()=>$('msg').textContent='',5000)}
 let wallsOn=false;function toggleWalls(){wallsOn=!wallsOn;$('bw').textContent=wallsOn?'🧱 Hut deewar: ON':'👻 Hut deewar: OFF'}
@@ -314,7 +325,17 @@ if(touch){
   const le=e=>T(e,t=>{if(t.identifier===lid)lid=null});
   look.addEventListener('touchend',le,{passive:false});look.addEventListener('touchcancel',le,{passive:false});
 }
+// r26: landscape + fullscreen. Browsers only allow both after a tap, so it happens on the Khelo button (also works as an installed PWA: manifest = fullscreen + landscape)
+function goFull(){
+  const el=document.documentElement,rf=el.requestFullscreen||el.webkitRequestFullscreen;
+  const lock=()=>{try{const p=screen.orientation&&screen.orientation.lock&&screen.orientation.lock('landscape');if(p&&p.catch)p.catch(()=>{})}catch(e){}};
+  try{if(rf&&!document.fullscreenElement&&!document.webkitFullscreenElement){const p=rf.call(el,{navigationUI:'hide'});if(p&&p.then)p.then(lock,lock);else lock()}else lock()}catch(e){lock()}
+}
+function chkPortrait(){document.body.classList.toggle('portrait',touch&&innerHeight>innerWidth)}
+addEventListener('resize',chkPortrait);addEventListener('orientationchange',chkPortrait);chkPortrait();
+document.addEventListener('fullscreenchange',()=>{if(touch&&started&&!document.fullscreenElement){started=false;$('go').textContent='▶ Wapas khelo (fullscreen)';$('ov').style.display='flex'}});
 $('go').onclick=()=>{
+  if(touch)goFull();
   $('ov').style.display='none';started=true;$('hud').style.display='flex';$('cross').style.display='block';
   if(touch){$('pad').style.display='block';$('look').style.display='block'}
   else{try{$('c').requestPointerLock()}catch(e){}}

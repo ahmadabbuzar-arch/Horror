@@ -1,4 +1,4 @@
-THE LAST VILLAGE r24 — split into zips because GitHub's web upload limit is 25 MB per file.
+THE LAST VILLAGE r25 — split into zips because GitHub's web upload limit is 25 MB per file.
 Extract ALL parts into the SAME folder (they merge; folder names are identical):
   part1_game        : the whole game + village (playable on its own, but without windmill / watchtower / cemetery)
   part2_props       : assets/props/* (windmill, watchtower, cemetery.glb, cemetery_fence.glb)
