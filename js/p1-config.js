@@ -18,29 +18,27 @@
    *            false -> use EXACTLY this spot, never move it (a blocked spot is only reported in the console)
    *   Add  ?spawns  to the URL to draw a coloured pole + facing cone at every spawn point, ?debug for coordinates.
    * =================================================================================================== */
-  /* r3: every NPC has its OWN spawn point, in front of its building (nobody stands near the starting hut any more).
-   * Coordinates are absolute world metres (anchor:'world'). The village model has 5 buildings (+ the start hut) and no signs saying
-   * which is the clinic / school / workshop, so the assignment below is by position and size — change x/z here to re-home anyone.
-   * Spots are outdoors at the front door (an interior spawn is just another x/z). snap:true = if blocked, nudge to the nearest free spot.
-   *   building      village building (west side of the road, numbered from the start): B1 first/closest ... B5 last/tallest (9.3 m)
-   *   raghunath  B1 (7x7 m, nearest the start)       -> "mechanic workshop"      kamla    B2 (small house with veranda) -> "village house"
-   *   arvind     B3 (shop front with sign board)     -> "clinic"                  chotu    B4 (large hall)               -> "abandoned school"
-   *   shyamlal   B5 (tallest, far end of the road)   -> "watchtower"              dev      behind B2/B3, west, off the road -> "hidden house"
-   *   saaya      far end behind B5; more encounter spots in saayaEncounters below (used by ?spawns markers now, by Phase 2 later) */
+  /* r3/r25: every NPC has its OWN spawn point, in front of its building (nobody stands near the starting hut).
+   * Coordinates are absolute world metres (anchor:'world'). r25: the village is now a WESTERN STREET (tools/make_western_town.py) running north along x = 3:
+   *   west row (fronts look east): blacksmith z 15 · general store z 25 · hotel z 38 · bank z 51
+   *   east row (fronts look west): wooden house z 13 · sheriff z 23.5 · saloon z 38 · small house z 47 · cabin z 54      church = end of the street (z 64, looks south)
+   * The building -> role assignment is mine (nothing in the pack says clinic/school) - change x/z here to re-home anyone.
+   *   raghunath = blacksmith ("workshop")   arvind = general store ("clinic")   kamla = small house   shyamlal = sheriff office (guard)
+   *   chotu = church ("abandoned school")   dev = behind the east row   saaya = behind the church; more encounter spots in saayaEncounters below */
   const npcs = {
-    raghunath: { place: 'mechanic workshop (B1)', anchor: 'world', x:   1.6, z: 14.0, face: { to: 'spawn' }, snap: true },
-    kamla:     { place: 'village house (B2)',     anchor: 'world', x:  -1.2, z: 22.0, face: { to: 'spawn' }, snap: true },
-    arvind:    { place: 'clinic (B3)',            anchor: 'world', x:  -0.6, z: 32.6, face: { to: 'spawn' }, snap: true },
-    chotu:     { place: 'abandoned school (B4)',  anchor: 'world', x:   2.6, z: 40.0, face: { to: 'spawn' }, snap: true },
-    shyamlal:  { place: 'watchtower (B5)',        anchor: 'world', x:   3.7, z: 57.0, face: { to: 'spawn' }, snap: true },
-    dev:       { place: 'hidden house (behind B2/B3)', anchor: 'world', x: -10.3, z: 28.4, face: { yaw: 90 }, snap: true },
-    saaya:     { place: 'supernatural encounter #1 (behind B5)', anchor: 'world', x: -3.5, z: 63.4, face: { to: 'spawn' }, snap: true }
+    raghunath: { place: 'blacksmith = mechanic workshop (west row, south)', anchor: 'world', x:   0.6, z: 13.0, face: { to: 'spawn' }, snap: true },
+    kamla:     { place: 'small house (east row, north)', anchor: 'world', x:   5.2, z: 45.2, face: { to: 'spawn' }, snap: true },
+    arvind:    { place: 'general store = clinic (west row)', anchor: 'world', x:   0.5, z: 25.0, face: { to: 'spawn' }, snap: true },
+    chotu:     { place: 'church (end of the street)', anchor: 'world', x:   3.0, z: 56.5, face: { to: 'spawn' }, snap: true },
+    shyamlal:  { place: 'sheriff office (east row)', anchor: 'world', x:   5.6, z: 26.5, face: { to: 'spawn' }, snap: true },
+    dev:       { place: 'behind the east row (cabin / house)', anchor: 'world', x:  15.5, z: 50.0, face: { yaw: 270 }, snap: true },
+    saaya:     { place: 'supernatural encounter #1 (behind the church)', anchor: 'world', x:  3.5, z: 71.0, face: { to: 'spawn' }, snap: true }
   };
   // further SAAYA encounter points (world x,z + where she faces). Phase 1 only draws markers for them with ?spawns.
   const saayaEncounters = [
-    { x: -3.5, z: 63.4, face: { to: 'spawn' }, note: 'behind the last building' },
-    { x:  4.5, z: 47.0, face: { yaw: 270 },    note: 'road, between clinic and hall (seen at the edge of the torch beam)' },
-    { x: -9.5, z: 36.0, face: { yaw: 90 },     note: 'behind the clinic, west tree line' },
+    { x:  3.5, z: 71.0, face: { to: 'spawn' }, note: 'behind the church' },
+    { x:  3.0, z: 45.0, face: { yaw: 270 },    note: 'middle of the street, between hotel and house (seen at the edge of the torch beam)' },
+    { x: -12.0, z: 44.0, face: { yaw: 90 },    note: 'behind the hotel, west tree line' },
     { x:  2.0, z:  3.0, face: { to: 'spawn' }, note: 'road just south of the first building' }
   ];
 
@@ -125,30 +123,24 @@
       { id: 'tower',    url: 'assets/props/watchtower.glb',    x: 13, z: 67, yaw: 20,  scale: 0.85, sink: 0.0, tint: 0.8, walls: true, climb: true, wallR: 0.18, footprint: 6 },
       // windmill in the east field
       { id: 'windmill', url: 'assets/props/windmill.glb',      x: 21, z: 28, yaw: 200, scale: 1.0, sink: 0.05, tint: 0.8, circles: [{ x: 0, z: 0, r: 1.9 }], footprint: 6 },
-      // ---- r12 GRAVEYARD (west of the village, behind the houses). Centre G = (-42, 38). Entered from the east gate, the domed mausoleum is straight ahead, the skeleton hand rises behind it.
-      // r19: the old Cluny scan is gone. New graveyard = 'Banchory-Ternan watch house' photogrammetry scan (10.3 x 7.2 model units, vertex-coloured, 100k tris), turned 168 deg so the long side runs east-west,
-      // ground flattened to y=0 (tools/prep_scan_color.py -> tools/flatten_scan_ground.py --yaw 168 --cell 1 --blur 1.5). scale 2.4 -> 24.8 x 17.4 m, chapel 5 m, tower 5.4 m. From the east gate the watch-house tower stands straight ahead at the far (west) end, the chapel on the right.
-      // Solid parts (local metres from the scan centre, scale already applied): chapel box + tower circle. Gravestones are not solid.
-      { id: 'gy_banchory', url: 'assets/props/banchory.glb',        x: -37.4, z: 38.5, yaw: 0,  scale: 2.4,  sink: 0.0, baseY: 0, tint: 0.8,  box: { cx: 5.35, cz: 1.05, hx: 3.5, hz: 2.95 }, circles: [{ x: -7.55, z: -0.1, r: 1.85 }], footprint: 12 },
-      // wrought-iron gate + pillars + 2 wall wings (9.9 m wide). Front (sign / lamps) = +Z of the model -> yaw 90 faces +X (toward the village road). The 2.6 m gap between the pillars stays open.
-      { id: 'gy_gate',  url: 'assets/props/graveyard_entrance.glb', x: -23.4, z: 44.5, yaw: 90, scale: 1.0,  sink: 0.0, tint: 0.75,
-        circles: [{ x: -1.9, z: 0, r: 0.6 }, { x: 1.9, z: 0, r: 0.6 }, { x: -2.8, z: 0, r: 0.45 }, { x: 2.8, z: 0, r: 0.45 }, { x: -3.6, z: 0, r: 0.45 }, { x: 3.6, z: 0, r: 0.45 }, { x: -4.4, z: 0, r: 0.45 }, { x: 4.4, z: 0, r: 0.45 }], footprint: 4 },
-      // r13 BOUNDARY: gate pillar + wall/railing wing copied round the whole graveyard (rectangle x -51.4..-23.4, z 27..50 = 28 x 23 m since r19, was 41 x 41 m; gate moved to z 44.5), made by tools/make_graveyard_wall.py. One mesh per ~3 units; walls:true = solid (ray collision), the gate gap on the east side belongs to gy_gate.
-      { id: 'gy_wall',  url: 'assets/props/graveyard_wall.glb',     x: -37.4, z: 38.5, yaw: 0,  scale: 1.0,  sink: 0.0, tint: 0.8, walls: true, wallR: 0.5, encloses: true, footprint: 1 },
-      // grave mounds with a skeletal hand (model is 50 units wide / 50 tall -> 0.18 = about 9 m). Ground plane of the original file is cropped away (tools/prep_props.py --crop).
-      { id: 'gy_hand',  url: 'assets/props/graveyard.glb',          x: -57,   z: 38,   yaw: 90, scale: 0.18, sink: 0.3, tint: 0.6,  circles: [{ x: 0, z: 0, r: 3.6 }], footprint: 9 }
+      // r21 CEMETERY (small, west of the village houses, 12 m from the nearest house). Made by tools/make_cemetery.py from the 'cemetery' kitbash: 15 crooked graves (5 x 3 grid) (turned mounds, leaning / half-sunk headstones; r22) and a closed wooden fence on all four sides.
+      // Fenced area x -30.0..-18.0, z 32.65..43.65 (12 x 11 m, enlarged in r23). The gate is an open gap on the EAST side (toward the village), world z 37.75..40.55 (2.8 m wide, lintel on top). Both GLBs are in metres, origin = same point (-25.5, 34.65) -> x,z below = that origin + each model's bbox centre.
+      // Circles (local metres from the graves' centre) = headstones r 0.38 + 2 circles per mound r 0.55, 3 per grave = 45, so the player cannot walk through the graves.
+      { id: 'gy_graves', url: 'assets/props/cemetery.glb',       x: -24.44, z: 38.21, yaw: 0, scale: 1.0, sink: 0.0, tint: 0.8,
+        circles: [{ x: -4.11, z: -3.9, r: 0.55 }, { x: -3.94, z: -2.71, r: 0.55 }, { x: -4.22, z: -4.6, r: 0.38 }, { x: -2.19, z: -3.91, r: 0.55 }, { x: -2.09, z: -2.71, r: 0.55 }, { x: -2.23, z: -4.59, r: 0.38 }, { x: -0.33, z: -3.57, r: 0.55 }, { x: -0.09, z: -2.39, r: 0.55 }, { x: -0.53, z: -4.34, r: 0.38 }, { x: 2.12, z: -3.61, r: 0.55 }, { x: 1.87, z: -2.44, r: 0.55 }, { x: 2.3, z: -4.42, r: 0.38 }, { x: 3.93, z: -3.64, r: 0.55 }, { x: 3.83, z: -2.44, r: 0.55 }, { x: 3.98, z: -4.43, r: 0.38 }, { x: -4.01, z: -0.51, r: 0.55 }, { x: -3.95, z: 0.69, r: 0.55 }, { x: -4.29, z: -1.1, r: 0.38 }, { x: -1.82, z: -0.49, r: 0.55 }, { x: -2.03, z: 0.69, r: 0.55 }, { x: -1.62, z: -1.5, r: 0.38 }, { x: -0.14, z: -0.57, r: 0.55 }, { x: -0.19, z: 0.63, r: 0.55 }, { x: -0.08, z: -1.1, r: 0.38 }, { x: 2.19, z: -0.49, r: 0.55 }, { x: 1.96, z: 0.69, r: 0.55 }, { x: 2.29, z: -1.36, r: 0.38 }, { x: 4.06, z: -0.68, r: 0.55 }, { x: 4.09, z: 0.52, r: 0.55 }, { x: 3.94, z: -1.38, r: 0.38 }, { x: -3.87, z: 2.89, r: 0.55 }, { x: -3.96, z: 4.08, r: 0.55 }, { x: -3.88, z: 2.02, r: 0.38 }, { x: -2.09, z: 2.69, r: 0.55 }, { x: -2.27, z: 3.87, r: 0.55 }, { x: -1.67, z: 1.89, r: 0.38 }, { x: 0.13, z: 2.7, r: 0.55 }, { x: -0.03, z: 3.89, r: 0.55 }, { x: 0.1, z: 1.99, r: 0.38 }, { x: 1.93, z: 2.72, r: 0.55 }, { x: 1.74, z: 3.91, r: 0.55 }, { x: 1.99, z: 1.82, r: 0.38 }, { x: 4.06, z: 2.65, r: 0.55 }, { x: 3.9, z: 3.84, r: 0.55 }, { x: 4.16, z: 1.99, r: 0.38 }], footprint: 6 },
+      { id: 'gy_fence',  url: 'assets/props/cemetery_fence.glb', x: -23.97, z: 38.15, yaw: 0, scale: 1.0, sink: 0.02, tint: 0.75, walls: true, wallR: 0.4, encloses: true, footprint: 6 }
     ],
     // abandoned cars on the road (same sedan file as the player's car, separate ?query = separate instance so car crumple edits are not shared)
     wrecks: [
       { id: 'wreck1', url: 'assets/vehicles/sedan.glb?wreck1', x: 4.0, z: 22, yaw: 78,  lengthM: 4.6, tilt: [0, 3], tint: 0.55, circles: [{ x: 0, z: -1.3, r: 0.95 }, { x: 0, z: 0, r: 0.95 }, { x: 0, z: 1.3, r: 0.95 }], footprint: 3 },
-      { id: 'wreck2', url: 'assets/vehicles/sedan.glb?wreck2', x: 5.6, z: 63,  yaw: 165, lengthM: 4.6, tilt: [2, -4], tint: 0.5,  circles: [{ x: 0, z: -1.3, r: 0.95 }, { x: 0, z: 0, r: 0.95 }, { x: 0, z: 1.3, r: 0.95 }], footprint: 3 }
+      { id: 'wreck2', url: 'assets/vehicles/sedan.glb?wreck2', x: 5.4, z: 49,  yaw: 165, lengthM: 4.6, tilt: [2, -4], tint: 0.5,  circles: [{ x: 0, z: -1.3, r: 0.95 }, { x: 0, z: 0, r: 0.95 }, { x: 0, z: 1.3, r: 0.95 }], footprint: 3 }
     ],
     // extra forest: clones of the hut model's own trees around the village so it sits in woods, not on an empty plain
     forest: {
       enabled: true, seed: 7, count: 90, interior: 10,
       area: [-62, 4, 66, 110],                 // x0,z0,x1,z1 where trees may appear
       open: [-14, 8, 38, 80],                  // inner rectangle kept free (village + road + props); `interior` trees are scattered inside anyway
-      keepOut: [[-12, 8, 10, 76], [-65, 21, -18, 56]],   // 2nd rect = graveyard (r19: smaller)             // never plant here (original village + road)
+      keepOut: [[-15, 6, 18, 75], [-33, 30, -15, 47]],   // 2nd rect = cemetery (r21);   // never plant here (original village + road)
       hutRadius: 18, minGap: 4.0, scale: [0.85, 1.25], propMargin: 4.5
     }
   };

@@ -3,7 +3,7 @@
 | Used as | Title / author | Licence | Source |
 |---|---|---|---|
 | Hut | Horror House Scene Nature Tree And Environment — CGS CREATOR | CC-BY-4.0 | https://sketchfab.com/3d-models/horror-house-scene-nature-tree-and-environment-20eee4e38c91458392eb607190b60499 |
-| Village | Old West Town - Asset Pack — NaiveGoblin (found by the user; matches the buildings in village.glb) | **CC0 1.0** | https://naivegoblin.itch.io/old-west-asset-pack |
+| Village (r25: only the 9 cactus pieces are still from it; the 5 houses were removed) | Old West Town - Asset Pack — NaiveGoblin (found by the user; matches the buildings in village.glb) | **CC0 1.0** | https://naivegoblin.itch.io/old-west-asset-pack |
 | Raghunath | Mechanic Low Poly Character — 00amza | CC-BY-4.0 | https://sketchfab.com/3d-models/mechanic-low-poly-character-81b1d3d665f04345a4c47e5418b8e6ad |
 | Kamla Devi | Old Lady FBX — silran666 | CC-BY-4.0 | https://sketchfab.com/3d-models/old-lady-fbx-72bf09c435aa49aaa8ecf0e979051f12 |
 | Dr. Arvind | Clinical-coat doctor — Innerscene Corp | CC0 1.0 (stated in the file's `asset.copyright`) | innerscene.com |
@@ -12,9 +12,8 @@
 | Dev | Man — Mcyborg | CC-BY-4.0 | https://sketchfab.com/3d-models/man-d91475da67924946b3b454daa17639a3 |
 | SAAYA | Horror Girl — LostBoyz2078 | **CC-BY-NC-4.0 (NON-COMMERCIAL)** | https://sketchfab.com/3d-models/horror-girl-cd5dae2513fb45619fbbbb83c1bd27a7 |
 | Player's car | Abandoned Generic Sedan 1 – Game Ready — Rashad Ibrahimli | CC-BY-4.0 | https://sketchfab.com/3d-models/abandoned-generic-sedan-1-game-ready-6a2169dafc254f399387a679305bb1bf |
-| Graveyard scan (gy_banchory) | Banchory-Ternan watch house, Scotland — Douglas Ledingham | **CC-BY-NC-4.0 (NON-COMMERCIAL)** | https://sketchfab.com/3d-models/banchory-ternan-watch-house-scotland-b5c1d7402c66480c910948631ad5c194 |
-| Graveyard gate (gy_gate) | Graveyard Entrance — Reydara | CC-BY-4.0 | https://sketchfab.com/3d-models/graveyard-entrance-e0aa0d480159465fa26795c26546a3b6 |
-| Skeleton hand + mounds (gy_hand) | Graveyard — Gurvinder Bal | CC-BY-4.0 | https://sketchfab.com/3d-models/graveyard-5c3e5556ff36488b8dac0cd3ffe223e5 |
+| Western street (r25: all 16 buildings / props in assets/models/village.glb) | 'Westen building pack' (Western_architect_obj.rar: OBJ + MTL + 44 textures, supplied by the project owner; probably the same kitbash as the cemetery) — **author and licence UNKNOWN, fill in** | ? | ? |
+| Cemetery (gy_graves + fence textures) | 'cemetery' from a "western city kitbash" (OBJ/FBX/blend + PBR textures supplied by the project owner) — **author and licence UNKNOWN, fill in** | ? | ? |
 | Windmill | Windmill from the village of Bogdanka, Poland (author: see file metadata) | **CC-BY-NC-4.0 (NON-COMMERCIAL)** | Sketchfab (supplied GLB) |
 | (not used) | Gritty Elderly Man in Leather Jacket — illiadelbilkovich | CC-BY-4.0 | https://sketchfab.com/3d-models/gritty-elderly-man-in-leather-jacket-2ab00e53883847e98d1f6872e6049069 |
 
@@ -25,5 +24,4 @@
 - r4: new SAAYA model, taller fence (FENCE_SCALE), lower eye height (EYE_H) -> docs/CHANGES_r4.md
 - r5: 6 props from user uploads (watchtower, windmill, clinic/bunker; boat wreck, ruined log house and farmstead house were removed in r8). Author/licence unknown for all -> fill in.
 
-4. **r19: the graveyard scan (Banchory-Ternan watch house) is NON-COMMERCIAL (like SAAYA).** It replaced the old Cluny scan (same author, same licence; Cluny is no longer in the project). Replace `assets/props/banchory.glb` before any paid/ad-supported release. Modifications: decimated 1.85 M -> 100 k tris, texture (specular map only) dropped, vertex colours kept, turned 168 deg about the vertical axis, ground flattened (tools/flatten_scan_ground.py), scaled x2.4 in the game; gate textures resized; graveyard.glb ground plane cropped.
-5. **r13: the new windmill is also CC-BY-NC-4.0 (non-commercial).** The boundary wall is built from the Graveyard Entrance model (CC-BY-4.0).
+4. **r13: the new windmill is also CC-BY-NC-4.0 (non-commercial).**
