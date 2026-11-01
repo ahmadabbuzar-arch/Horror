@@ -174,7 +174,7 @@
 
   P1.updateProps = function (dt, pos) {
     if (!C) return;
-    try { liftTick(pos); } catch (err) { /* optional UI */ }
+    /* r10: teleport button removed - tower is climbed by walking the stairs */
     let nearest = null, nd = 1e9;
     for (const e of entries) {
       const d = Math.hypot(pos.x - e.c.x, pos.z - e.c.z);

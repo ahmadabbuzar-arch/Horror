@@ -202,7 +202,8 @@ function update(dt){
   pos.x=Math.max(-150,Math.min(150,pos.x));pos.z=Math.max(-150,Math.min(150,pos.z));
   let tg=0;
   let pf=[];try{if(!drv&&window.P1&&P1.propFloors)pf=P1.propFloors(pos)}catch(e){}
-  const gm=cabinMeshes.concat(nearV,pf);   // r8: + tower stairs/platformif(!drv&&gm.length){rc.set(new THREE.Vector3(pos.x,gy+0.8,pos.z),DOWN);rc.far=2.5;const h=rc.intersectObjects(gm,false)[0];if(h&&h.point.y>-0.2)tg=Math.max(0,h.point.y)}
+  const gm=cabinMeshes.concat(nearV,pf);   // r8: + tower stairs/platform
+  if(!drv&&gm.length){rc.set(new THREE.Vector3(pos.x,gy+0.8,pos.z),DOWN);rc.far=2.5;const h=rc.intersectObjects(gm,false)[0];if(h&&h.point.y>-0.2)tg=Math.max(0,h.point.y)}
   gy+=(tg-gy)*Math.min(1,dt*12);
   bob+=Math.min(1,n)*sp*dt*2.4;
   cam.position.set(pos.x,gy+EYE_H+Math.sin(bob)*0.035*Math.min(1,n),pos.z);
