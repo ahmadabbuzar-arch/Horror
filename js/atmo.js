@@ -7,10 +7,10 @@
   const T = THREE;
   const A = (window.ATMO = { ready: false });
   // quality presets: stars, mist sprites, dome clouds on/off
-  const PRESET = { high: { stars: 1100, mist: 24, clouds: true }, medium: { stars: 650, mist: 16, clouds: true }, low: { stars: 350, mist: 8, clouds: false } };
-  const FOG_COL = 0x0c1220, FOG_BASE = 0.030;
+  const PRESET = { high: { stars: 1100, mist: 34, clouds: true }, medium: { stars: 650, mist: 24, clouds: true }, low: { stars: 350, mist: 12, clouds: false } };
+  const FOG_COL = 0x0e1524, FOG_BASE = 0.062;   // r27: much denser (visibility ~40 m, far trees vanish into the dark)
   const MOON_DIR = new T.Vector3(-0.55, 0.50, 0.38).normalize();
-  const R_SKY = 100, MIST_R = 26;
+  const R_SKY = 100, MIST_R = 22;
   let scene, dome, stars, moon, glow, mist = [], P, fog, tU = { value: 0 }, pr = 1;
   const WIND = new T.Vector3(0.45, 0, 0.16);
 
@@ -74,7 +74,7 @@
         'float fbm(vec2 p){float a=0.5,s=0.0;for(int i=0;i<3;i++){s+=a*n(p);p*=2.03;a*=0.5;}return s;}',
         'void main(){',
         ' vec3 d=normalize(vD);float y=d.y;',
-        ' vec3 hor=vec3(0.047,0.070,0.125);vec3 zen=vec3(0.012,0.020,0.055);',
+        ' vec3 hor=vec3(0.055,0.082,0.141);vec3 zen=vec3(0.012,0.020,0.055);',
         ' vec3 col=mix(hor,zen,pow(clamp(y,0.0,1.0),0.5));',
         ' if(y<0.0)col=hor*(1.0+y*0.6);',
         ' float md=max(dot(d,uMoon),0.0);',
@@ -131,7 +131,7 @@
       const m = new T.SpriteMaterial({ map: texs[i % 3], color: 0x9fb0cc, transparent: true, depthWrite: false, opacity: 0, rotation: rnd(0, 6.28), fog: true });
       const s = new T.Sprite(m);
       const w = rnd(8, 14); s.scale.set(w, w * rnd(0.32, 0.5), 1);
-      s.userData = { base: rnd(0.16, 0.30), h: rnd(0.15, 1.4), rot: rnd(-0.03, 0.03), ph: rnd(0, 6.28), sp: rnd(0.6, 1.4) };
+      s.userData = { base: rnd(0.24, 0.42), h: rnd(0.1, 2.0), rot: rnd(-0.03, 0.03), ph: rnd(0, 6.28), sp: rnd(0.6, 1.4) };
       s.renderOrder = 2; s.frustumCulled = false;
       scene.add(s); mist.push(s);
     }
@@ -165,7 +165,8 @@
       if (dome) { dome.position.copy(cp); stars.position.copy(cp); }
       if (moon) { moon.position.copy(cp).addScaledVector(MOON_DIR, R_SKY * 0.93); moon.lookAt(cp); }
       // fog "breathes" slowly (thicker / thinner waves) -> creepy, never fully clear
-      if (fog) fog.density = FOG_BASE * (1 + 0.14 * Math.sin(t * 0.11) + 0.07 * Math.sin(t * 0.37 + 1.3));
+      const surge = Math.max(0, Math.sin(t * 0.045 + 2.0)) ** 3;      // every ~2 min the fog slowly thickens for a while
+      if (fog) fog.density = FOG_BASE * (1 + 0.16 * Math.sin(t * 0.11) + 0.08 * Math.sin(t * 0.37 + 1.3) + 0.30 * surge);
       // mist off indoors (smooth), on outdoors
       A.mistFade += ((indoor ? 0 : 1) - A.mistFade) * Math.min(1, dt * 2.5);
       const base = gy || 0;

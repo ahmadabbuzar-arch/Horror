@@ -10,3 +10,6 @@ index.html: on phones the "Khelo" button now enters fullscreen and locks landsca
 * Fog is slightly denser (0.030) and "breathes" slowly. Fog colour = sky horizon colour so the treeline blends.
 * Tune at the top of js/atmo.js: FOG_BASE (thicker/thinner), PRESET (stars / mist count), MOON_DIR (moon position). URL: ?nomist (no mist) ?nosky (old plain sky).
 * NOT tested in a browser (no Three.js in the build sandbox); logic smoke-tested with a mock. If anything fails it disables itself and the game runs as before.
+
+## r27 — more horror
+Fog density 0.030 -> 0.062 (visibility ~40 m instead of ~100 m) with slow thickening waves, denser/taller mist (12-34 sprites), darker ambient light (0.95 -> 0.72), dark vignette on screen edges. Tune: FOG_BASE in js/atmo.js (0.045 = lighter, 0.08 = very thick), HemisphereLight intensity + #vig in index.html.

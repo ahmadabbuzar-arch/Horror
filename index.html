@@ -34,9 +34,11 @@ button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(2
 #rot b{font-size:56px;display:inline-block;animation:rotp 1.6s ease-in-out infinite}
 @keyframes rotp{0%,30%{transform:rotate(0)}70%,100%{transform:rotate(-90deg)}}
 body.portrait #rot{display:flex}
+#vig{position:fixed;inset:0;z-index:4;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 38%,rgba(0,0,0,.55) 75%,rgba(0,0,0,.9) 100%);animation:vigb 6s ease-in-out infinite}
+@keyframes vigb{0%,100%{opacity:.85}50%{opacity:1}}
 </style></head><body>
 <div id="rot"><b>📱</b><div>Phone ko <b style="font-size:inherit;animation:none">landscape</b> me ghumao</div><div class="sm">Game sirf landscape me chalta hai</div></div>
-<canvas id="c"></canvas><div id="cross"></div>
+<canvas id="c"></canvas><div id="vig"></div><div id="cross"></div>
 <div id="pad"></div><div id="look"></div><div class="j" id="jb"><i id="jk"></i></div>
 <div id="hud"><button id="bv" class="dev">🏘️ Gaon</button><button id="bh" class="dev">🏠 Hut ke andar</button><button id="bw" class="dev">👻 Hut deewar: OFF</button><button id="bl" aria-label="Torch">🔦</button><button id="bq" aria-label="Graphics settings">⚙️</button></div>
 <button id="dr" style="display:none"></button><div id="msg"></div>
@@ -101,7 +103,7 @@ function _shrinkTex(t,cap){
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x06080f);scene.fog=new THREE.FogExp2(0x080b14,0.028);
 try{window.ATMO&&ATMO.init(scene,GQ,renderer)}catch(e){console.warn('atmo',e)}   // r26: night sky, stars, moon, creepy mist
 const cam=new THREE.PerspectiveCamera(72,1,0.2,170);cam.rotation.order='YXZ';scene.add(cam);
-scene.add(new THREE.HemisphereLight(0x5a6fa8,0x2a2118,0.95));
+scene.add(new THREE.HemisphereLight(0x5a6fa8,0x2a2118,0.72));   // r27: darker ambient (was 0.95)
 const moon=new THREE.DirectionalLight(0x9fb2ff,0.7);moon.position.set(-20,40,10);scene.add(moon);
 const torch=new THREE.SpotLight(0xfff0c8,2.2,32,0.5,0.55,1);torch.position.set(0.1,-0.1,0);torch.target.position.set(0,0,-1);cam.add(torch,torch.target);
 const lamp=new THREE.PointLight(0xffa24a,1.4,12);scene.add(lamp);
