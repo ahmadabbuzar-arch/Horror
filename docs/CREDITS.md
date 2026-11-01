@@ -19,3 +19,4 @@
 2. **CC-BY requires visible attribution.** r2 adds a small credits line to the start screen; a proper credits screen is still needed before release. Modifications (texture resizing, mesh removal, material changes) are allowed under CC-BY but should be noted — they are listed in docs/PHASE1_REPORT.md.
 3. **The village model has no licence information at all.** Find where it came from before publishing.
 - r4: new SAAYA model, taller fence (FENCE_SCALE), lower eye height (EYE_H) -> docs/CHANGES_r4.md
+- r5: 6 props from user uploads (watchtower, windmill, boat wreck, ruined log house, farmstead house, clinic/bunker). Author/licence unknown for all -> fill in.

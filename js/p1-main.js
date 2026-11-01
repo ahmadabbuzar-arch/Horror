@@ -16,8 +16,9 @@
     if (!world.notify) world.notify = function () {};
     guard(function () { const bad = P1.startCharacters(world); if (bad && bad.length) world.notify('⚠ P1 config: ' + bad.length + ' problem(s) — console dekho'); }, 'characters start');
     guard(function () { P1.loadCar(world); }, 'car start');
+    guard(function () { P1.startProps(world); }, 'props start');
     P1.log('started (' + P1.VERSION + ')' + (P1.cfg.gallery ? ' [gallery]' : '') + (P1.cfg.debug ? ' [debug]' : ''));
   };
-  P1.update = function (dt, pos) { guard(function () { P1.updateCharacters(dt, pos); P1.debugTick(dt); }, 'update'); };
-  P1.collide = function (pos) { guard(function () { P1.collideCharacters(pos); P1.collideCar(pos); }, 'collide'); };
+  P1.update = function (dt, pos) { guard(function () { P1.updateCharacters(dt, pos); P1.debugTick(dt); }, 'update'); guard(function () { P1.updateProps(dt, pos); }, 'props update'); };
+  P1.collide = function (pos) { guard(function () { P1.collideCharacters(pos); P1.collideCar(pos); }, 'collide'); guard(function () { P1.collideProps(pos); }, 'props collide'); };
 })();

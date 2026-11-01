@@ -6,7 +6,7 @@
   const P1 = (window.P1 = window.P1 || {});
   const QS = location.search;
 
-  P1.VERSION = 'phase1-r3-corrections-untested';
+  P1.VERSION = 'phase1-r5-village-untested';
   P1.cfg = {
     loadRadius: 30,        // metres: start loading a character when the player is this close
     unloadRadius: 46,      // metres: dispose a character when the player is farther than this

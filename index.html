@@ -46,6 +46,7 @@ button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(2
 <script src="js/p1-config.js"></script>
 <script src="js/p1-characters.js"></script>
 <script src="js/p1-car.js"></script>
+<script src="js/p1-props.js"></script>
 <script src="js/p1-main.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -237,7 +238,7 @@ function p1Clear(x,z,r){ // true if nothing solid within r metres at knee/chest 
   const p=new THREE.Vector3(x,1,z),ms=vmesh.filter(o=>o.userData.box.containsPoint(p));if(!ms.length)return true;
   for(const h of[0.5,1.3])for(let k=0;k<8;k++){const a=k/8*6.2832;rc.set(new THREE.Vector3(x,h,z),new THREE.Vector3(Math.cos(a),0,Math.sin(a)));rc.far=r;if(rc.intersectObjects(ms,false).length)return false}
   return true}
-function p1Start(){try{if(window.P1&&P1.start)P1.start({scene,cam,pos,cc,doors,spawn:{x:pos.x,z:pos.z},villageBox:()=>villageBox,notify:t=>{const m=$('msg');if(m)m.textContent=t},addDoor:d=>doors.push(d),ground:p1Ground,clear:p1Clear})}catch(e){console.error('[P1] start failed',e)}}
+function p1Start(){try{if(window.P1&&P1.start)P1.start({scene,cam,pos,cc,doors,spawn:{x:pos.x,z:pos.z},villageBox:()=>villageBox,root:()=>rootRef,trees:trees,notify:t=>{const m=$('msg');if(m)m.textContent=t},addDoor:d=>doors.push(d),ground:p1Ground,clear:p1Clear})}catch(e){console.error('[P1] start failed',e)}}
 setTimeout(()=>{
   try{
     if(location.protocol==='file:')$('st').textContent='⚠️ Ab game alag asset files use karta hai — file:// se nahi chalega. Local server se kholo (README dekho).';

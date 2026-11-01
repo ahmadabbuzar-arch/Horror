@@ -109,7 +109,47 @@
     ownLook: true         // r4: true = use the new model's own textures (tint in appearance.saaya); false = old flat black shadow look
   };
 
-  P1.config = { npcs: npcs, placement: placement, appearance: appearance, saaya: saaya, saayaEncounters: saayaEncounters };
+
+  /* ===================================================================================================
+   * 5. VILLAGE PROPS (r5) — the 7 extra models, placed around the original village (world coordinates, metres).
+   *   x,z     : where the model's footprint centre goes        yaw : degrees, 0 = model front (+Z) faces +Z, 90 = faces +X
+   *   scale   : model units -> metres  (or lengthM: longest side in metres)    sink : metres pushed below ground (hides slab edges)
+   *   tint    : multiplies the texture colour (scanned models have baked daylight -> darkened for the night)
+   *   walls   : true  -> ray-based wall collision (enterable buildings)    box:{cx,cz,hx,hz} / circles:[{x,z,r}] -> solid, local metres
+   *   The original village sits at x -9..2, z 12..61 with its road at x ~3; the hut is at (-4.9,-16.9).
+   * ================================================================================================= */
+  const village = {
+    loadRadius: 85, unloadRadius: 125,        // fog hides everything beyond ~65 m, so far props are not even loaded
+    props: [
+      // farmstead lot (house with interior, yard wall, path, road strip). Cropped from the 28x63 m scan; 1 unit = 1 cm. Lot front = +Z -> yaw -90 faces the village road.
+      { id: 'house',    url: 'assets/props/vintage_house.glb', x: 21, z: 27, yaw: -90, scale: 0.01, sink: 0.12, tint: 0.8, walls: true, footprint: 15 },
+      // ruined log house (photo-scan, ground patch included)
+      { id: 'ruin',     url: 'assets/props/ruined_house.glb',  x: 16, z: 54, yaw: -70, scale: 0.32, sink: 0.12, tint: 0.55, box: { cx: 0, cz: 0, hx: 5.6, hz: 5.4 }, footprint: 10 },
+      // wooden watchtower at the far end of the road (landmark visible through the trees)
+      { id: 'tower',    url: 'assets/props/watchtower.glb',    x: 4.5, z: 72, yaw: 20,  scale: 0.85, sink: 0.0, tint: 0.8, walls: true, footprint: 6 },
+      // windmill in the east field
+      { id: 'windmill', url: 'assets/props/windmill.glb',      x: 33, z: 50, yaw: 200, scale: 1.0, sink: 0.05, tint: 0.55, circles: [{ x: 0, z: 0, r: 1.9 }], footprint: 6 },
+      // boat wreck on its mud slab (west field). The slab is sunk so only its top shows.
+      { id: 'boat',     url: 'assets/props/boat_wreck.glb',    x: -21, z: 29, yaw: 60, scale: 0.55, sink: 0.9, tint: 0.55, circles: [{ x: -1.8, z: 0.4, r: 1.6 }, { x: 0.6, z: 0, r: 1.8 }, { x: 3, z: -0.4, r: 1.5 }], footprint: 8 },
+      // concrete clinic/bunker with corridors (enterable)
+      { id: 'bunker',   url: 'assets/props/clinic_bunker.glb', x: -27, z: 52, yaw: 90, scale: 1.0, sink: 0.05, tint: 0.85, walls: true, footprint: 14 }
+    ],
+    // abandoned cars on the road (same sedan file as the player's car, separate ?query = separate instance so car crumple edits are not shared)
+    wrecks: [
+      { id: 'wreck1', url: 'assets/vehicles/sedan.glb?wreck1', x: 4.0, z: 22, yaw: 78,  lengthM: 4.6, tilt: [0, 3], tint: 0.55, circles: [{ x: 0, z: -1.3, r: 0.95 }, { x: 0, z: 0, r: 0.95 }, { x: 0, z: 1.3, r: 0.95 }], footprint: 3 },
+      { id: 'wreck2', url: 'assets/vehicles/sedan.glb?wreck2', x: 5.6, z: 63,  yaw: 165, lengthM: 4.6, tilt: [2, -4], tint: 0.5,  circles: [{ x: 0, z: -1.3, r: 0.95 }, { x: 0, z: 0, r: 0.95 }, { x: 0, z: 1.3, r: 0.95 }], footprint: 3 }
+    ],
+    // extra forest: clones of the hut model's own trees around the village so it sits in woods, not on an empty plain
+    forest: {
+      enabled: true, seed: 7, count: 90, interior: 10,
+      area: [-62, 4, 66, 110],                 // x0,z0,x1,z1 where trees may appear
+      open: [-14, 8, 38, 80],                  // inner rectangle kept free (village + road + props); `interior` trees are scattered inside anyway
+      keepOut: [[-12, 8, 10, 76]],             // never plant here (original village + road)
+      hutRadius: 18, minGap: 4.0, scale: [0.85, 1.25], propMargin: 4.5
+    }
+  };
+
+  P1.config = { npcs: npcs, placement: placement, appearance: appearance, saaya: saaya, saayaEncounters: saayaEncounters, village: village };
 
   /* ---- car tuning (see also js/p1-core.js defaults) ---- */
   Object.assign(P1.cfg.car, {
