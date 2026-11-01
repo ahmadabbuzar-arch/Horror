@@ -24,6 +24,8 @@
       let hide = true;
       ms.forEach(function (m) {
         if (!m) return;
+        m.side = T.DoubleSide;     // glTF default is single-sided: scans / interiors lose walls and ground when seen from behind (same fix the game applies to the hut)
+        m.needsUpdate = true;
         if (m.color && c.tint != null) m.color.multiplyScalar(c.tint);
         if (m.map && m.map.anisotropy !== undefined) m.map.anisotropy = 2;
         if (!(m.transparent && m.opacity < 0.05)) hide = false;
@@ -33,7 +35,8 @@
     const box0 = P1.measure(model), sz = box0.getSize(new T.Vector3());
     const s = c.lengthM ? c.lengthM / Math.max(sz.x, sz.z) : (c.scale || 1);
     const inner = new T.Group(); inner.add(model);
-    model.position.set(-(box0.min.x + box0.max.x) / 2, -box0.min.y, -(box0.min.z + box0.max.z) / 2);
+    // baseY (model units) = level that must touch the ground; default = lowest vertex. The farmstead scan is a terrain chunk whose lowest point is 1.6 m below the house floor.
+    model.position.set(-(box0.min.x + box0.max.x) / 2, -(c.baseY != null ? c.baseY : box0.min.y), -(box0.min.z + box0.max.z) / 2);
     inner.scale.setScalar(s);
     if (c.tilt) { inner.rotation.x = c.tilt[0] * DEG; inner.rotation.z = c.tilt[1] * DEG; }
     const holder = new T.Group(); holder.add(inner);
@@ -153,11 +156,11 @@
   };
 
   const _o = new T.Vector3();
-  P1.collideProps = function (pos) {
+  P1.collideProps = function (pos, rad) {
     if (!C) return;
     for (const e of entries) {
       if (e.status !== 'ready' || !e.holder) continue;
-      const c = e.c, r = 0.35, yaw = (c.yaw || 0) * DEG, cs = Math.cos(yaw), sn = Math.sin(yaw);
+      const c = e.c, r = rad || 0.35, yaw = (c.yaw || 0) * DEG, cs = Math.cos(yaw), sn = Math.sin(yaw);
       if (Math.abs(pos.x - c.x) > 40 || Math.abs(pos.z - c.z) > 40) continue;
       // local frame of the prop (Ry(yaw): world = (lx*cs + lz*sn, -lx*sn + lz*cs))
       const dx = pos.x - c.x, dz = pos.z - c.z, lx = dx * cs - dz * sn, lz = dx * sn + dz * cs;

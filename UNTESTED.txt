@@ -1,4 +1,4 @@
-*** r5 BUILD — STILL NOT RUN IN A BROWSER (see docs/CHANGES_r5.md) ***
+*** r7 BUILD — drivable car + z-fight fix, needs phone test (see docs/CHANGES_r7.md) ***
 No Three.js / network in the build sandbox. Verified offline: JS syntax, node tools/test_p1_logic.js (33), node tools/test_hut_ground.js (13),
 python3 tools/check_assets.py, and offline preview renders in screenshots/ (own renderer, NOT the game).
 Details + remaining issues: docs/CORRECTION_REPORT_r3.md

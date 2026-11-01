@@ -19,6 +19,6 @@
     guard(function () { P1.startProps(world); }, 'props start');
     P1.log('started (' + P1.VERSION + ')' + (P1.cfg.gallery ? ' [gallery]' : '') + (P1.cfg.debug ? ' [debug]' : ''));
   };
-  P1.update = function (dt, pos) { guard(function () { P1.updateCharacters(dt, pos); P1.debugTick(dt); }, 'update'); guard(function () { P1.updateProps(dt, pos); }, 'props update'); };
+  P1.update = function (dt, pos) { guard(function () { P1.updateCharacters(dt, pos); P1.debugTick(dt); }, 'update'); guard(function () { P1.updateProps(dt, pos); }, 'props update'); guard(function () { P1.driveUI(pos); }, 'drive ui'); };
   P1.collide = function (pos) { guard(function () { P1.collideCharacters(pos); P1.collideCar(pos); }, 'collide'); guard(function () { P1.collideProps(pos); }, 'props collide'); };
 })();

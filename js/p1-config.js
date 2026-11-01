@@ -122,8 +122,8 @@
     loadRadius: 85, unloadRadius: 125,        // fog hides everything beyond ~65 m, so far props are not even loaded
     props: [
       // farmstead lot (house with interior, yard wall, path, road strip). Cropped from the 28x63 m scan; 1 unit = 1 cm. Lot front = +Z -> yaw -90 faces the village road.
-      { id: 'house',    url: 'assets/props/vintage_house.glb', x: 21, z: 27, yaw: -90, scale: 0.01, sink: 0.12, tint: 0.8, walls: true, footprint: 15 },
-      // ruined log house (photo-scan, ground patch included)
+      { id: 'house',    url: 'assets/props/vintage_house.glb', x: 21, z: 27, yaw: -90, scale: 0.01, baseY: 172, sink: 0.04, tint: 0.8, walls: true, footprint: 15 },
+      // ruined log house (photo-scan, ground patch included; r6: kept at full 100k tris - decimation shredded the planks)
       { id: 'ruin',     url: 'assets/props/ruined_house.glb',  x: 16, z: 54, yaw: -70, scale: 0.32, sink: 0.12, tint: 0.55, box: { cx: 0, cz: 0, hx: 5.6, hz: 5.4 }, footprint: 10 },
       // wooden watchtower at the far end of the road (landmark visible through the trees)
       { id: 'tower',    url: 'assets/props/watchtower.glb',    x: 4.5, z: 72, yaw: 20,  scale: 0.85, sink: 0.0, tint: 0.8, walls: true, footprint: 6 },

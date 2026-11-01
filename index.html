@@ -47,6 +47,7 @@ button{font:inherit;color:var(--fg);background:var(--pn);border:1px solid rgba(2
 <script src="js/p1-characters.js"></script>
 <script src="js/p1-car.js"></script>
 <script src="js/p1-props.js"></script>
+<script src="js/p1-drive.js"></script>
 <script src="js/p1-main.js"></script>
 <script>
 const $=id=>document.getElementById(id);
@@ -54,7 +55,7 @@ const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
 const renderer=new THREE.WebGLRenderer({canvas:$('c'),antialias:false});
 renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputEncoding=THREE.sRGBEncoding;
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x06080f);scene.fog=new THREE.FogExp2(0x080b14,0.028);
-const cam=new THREE.PerspectiveCamera(72,1,0.05,220);cam.rotation.order='YXZ';scene.add(cam);
+const cam=new THREE.PerspectiveCamera(72,1,0.12,170);cam.rotation.order='YXZ';scene.add(cam);
 scene.add(new THREE.HemisphereLight(0x5a6fa8,0x2a2118,0.95));
 const moon=new THREE.DirectionalLight(0x9fb2ff,0.7);moon.position.set(-20,40,10);scene.add(moon);
 const torch=new THREE.SpotLight(0xfff0c8,2.2,32,0.5,0.55,1);torch.position.set(0.1,-0.1,0);torch.target.position.set(0,0,-1);cam.add(torch,torch.target);
@@ -80,6 +81,8 @@ function hutGroundFix(root,cabin,b,scale,sink){
   }catch(e){console.warn('[hut] base level failed, using bbox min',e)}
   // 2) terrain height under the (scaled) footprint: downward rays onto the ground plane of the same GLB
   let ground=0;const terr=[];root.traverse(o=>{if(!o.isMesh)return;const tb=new THREE.Box3().setFromObject(o);if(tb.max.x-tb.min.x>100&&tb.max.y-tb.min.y<2)terr.push(o)}); // the big flat ground plane
+  // r7: village floors/porches sit exactly at y=0 like the ground plane -> z-fighting (surface flickers while moving). Push the ground plane back in depth.
+  terr.forEach(o=>(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.polygonOffset=true;m.polygonOffsetFactor=3;m.polygonOffsetUnits=6;m.needsUpdate=true}));
   try{
     if(terr.length){
       const c=b.getCenter(new THREE.Vector3()),sz=b.getSize(new THREE.Vector3()),hx=sz.x*scale*0.4,hz=sz.z*scale*0.4,ray=new THREE.Raycaster(),ys=[];
@@ -177,22 +180,33 @@ function showDoor(force){
   let nd=null,bd=3.6;for(const d of doors){const q=Math.hypot(pos.x-d.x,pos.z-d.z);if(q<bd){bd=q;nd=d}}
   if(nd!==nearDoor||force){nearDoor=nd;const b=$('dr');b.style.display=nd?'block':'none';if(nd){const k=touch?'':' (E)';b.textContent=(nd.isCar?(nd.t?'🚗 Car door band karo':'🚗 Car door kholo'):(nd.t?'🚪 Door band karo':'🚪 Door kholo'))+k}}
 }
+function carBlocked(x,z,dx,dz,len){ // r7: car ke liye deewar/hut ray-test (3 rays: beech + dono side)
+  const d=new THREE.Vector3(dx,0,dz).normalize(),n=new THREE.Vector3(-d.z,0,d.x),nearHut=Math.hypot(x-cc.x,z-cc.z)<14;
+  for(const off of[0,0.85,-0.85]){const o=new THREE.Vector3(x+n.x*off,0.6,z+n.z*off);
+    const nv=vmesh.filter(m=>m.userData.box.containsPoint(o));if(nv.length&&hit(o,d,len,nv))return true;
+    if(nearHut&&hit(o,d,len,cabinMeshes))return true}
+  return false}
 function update(dt){
   showDoor(false);for(const d of doors){d.cur+=(d.t-d.cur)*Math.min(1,dt*5);for(const pv of d.piv)pv.rotation.y=d.cur*pv.userData.th}
   const pp=new THREE.Vector3(pos.x,gy+1,pos.z);nearV=vmesh.filter(o=>o.userData.box.containsPoint(pp));
   let f=(keys.w?1:0)-(keys.s?1:0)-joy.y,s=(keys.d?1:0)-(keys.a?1:0)+joy.x;
   const n=Math.hypot(f,s);if(n>1){f/=n;s/=n}
   const sp=keys.shift?5.6:3.3,sn=Math.sin(yaw),cs=Math.cos(yaw);
+  const drv=!!(window.P1&&P1.drive&&P1.drive.active&&P1.car&&P1.car.ready);
+  if(drv){const r=P1.drive.step(dt,f,s,pos,trees,yaw,carBlocked);yaw=r.yaw;gy=0;const bd=$('dr');bd.style.display='none';nearDoor=null}
+  else{
   step((-sn*f+cs*s)*sp*dt,0);step(0,(-cs*f-sn*s)*sp*dt);
   for(const t of trees){const dx=pos.x-t.x,dz=pos.z-t.z,d=Math.hypot(dx,dz),m=t.r+0.35;if(d<m&&d>1e-4){pos.x=t.x+dx/d*m;pos.z=t.z+dz/d*m}}
+  }
   if(window.P1&&P1.collide)P1.collide(pos);
   pos.x=Math.max(-150,Math.min(150,pos.x));pos.z=Math.max(-150,Math.min(150,pos.z));
   let tg=0;
-  const gm=cabinMeshes.concat(nearV);if(gm.length){rc.set(new THREE.Vector3(pos.x,gy+0.8,pos.z),DOWN);rc.far=2.5;const h=rc.intersectObjects(gm,false)[0];if(h&&h.point.y>-0.2)tg=Math.max(0,h.point.y)}
+  const gm=cabinMeshes.concat(nearV);if(!drv&&gm.length){rc.set(new THREE.Vector3(pos.x,gy+0.8,pos.z),DOWN);rc.far=2.5;const h=rc.intersectObjects(gm,false)[0];if(h&&h.point.y>-0.2)tg=Math.max(0,h.point.y)}
   gy+=(tg-gy)*Math.min(1,dt*12);
   bob+=Math.min(1,n)*sp*dt*2.4;
   cam.position.set(pos.x,gy+EYE_H+Math.sin(bob)*0.035*Math.min(1,n),pos.z);
   cam.rotation.set(pitch,yaw,0);
+  if(drv)P1.drive.camPos(cam);
   lamp.intensity=1.2+Math.sin(performance.now()*0.011)*0.25+Math.random()*0.25;
   if(window.P1&&P1.update)P1.update(dt,pos);
 }
