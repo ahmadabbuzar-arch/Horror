@@ -1,5 +1,7 @@
-THE LAST VILLAGE r25 - split into zips because GitHub's web upload limit is 25 MB per file.
-Extract the parts into the SAME folder (they merge; folder names are identical):
-  part1_game  : the whole game + the NEW western street (assets/models/village.glb)   <- only this part changed since r24
-  part2_props : assets/props/* (windmill, watchtower, cemetery) - UNCHANGED, keep your r24 part2
-  part3_hq_optional : NOT USED any more. Delete assets/models/village_hq.glb if you have it (it still contains the old houses; ?hq is gone).
+THE LAST VILLAGE r24 — split into zips because GitHub's web upload limit is 25 MB per file.
+Extract ALL parts into the SAME folder (they merge; folder names are identical):
+  part1_game        : the whole game + village (playable on its own, but without windmill / watchtower / cemetery)
+  part2_props       : assets/props/* (windmill, watchtower, cemetery.glb, cemetery_fence.glb)
+  part3_hq_optional : assets/models/village_hq.glb (open the game with ?hq at the end of the URL)
+If you used the OLD part2, delete assets/props/banchory.glb, graveyard_entrance.glb, graveyard_wall.glb, graveyard.glb, cluny.glb (not used any more).
+If you use git / GitHub Desktop / drag-and-drop of folders, none of this matters: every single file is below 15 MB.

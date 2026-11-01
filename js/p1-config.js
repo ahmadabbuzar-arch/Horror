@@ -18,27 +18,29 @@
    *            false -> use EXACTLY this spot, never move it (a blocked spot is only reported in the console)
    *   Add  ?spawns  to the URL to draw a coloured pole + facing cone at every spawn point, ?debug for coordinates.
    * =================================================================================================== */
-  /* r3/r25: every NPC has its OWN spawn point, in front of its building (nobody stands near the starting hut).
-   * Coordinates are absolute world metres (anchor:'world'). r25: the village is now a WESTERN STREET (tools/make_western_town.py) running north along x = 3:
-   *   west row (fronts look east): blacksmith z 15 · general store z 25 · hotel z 38 · bank z 51
-   *   east row (fronts look west): wooden house z 13 · sheriff z 23.5 · saloon z 38 · small house z 47 · cabin z 54      church = end of the street (z 64, looks south)
-   * The building -> role assignment is mine (nothing in the pack says clinic/school) - change x/z here to re-home anyone.
-   *   raghunath = blacksmith ("workshop")   arvind = general store ("clinic")   kamla = small house   shyamlal = sheriff office (guard)
-   *   chotu = church ("abandoned school")   dev = behind the east row   saaya = behind the church; more encounter spots in saayaEncounters below */
+  /* r3: every NPC has its OWN spawn point, in front of its building (nobody stands near the starting hut any more).
+   * Coordinates are absolute world metres (anchor:'world'). The village model has 5 buildings (+ the start hut) and no signs saying
+   * which is the clinic / school / workshop, so the assignment below is by position and size — change x/z here to re-home anyone.
+   * Spots are outdoors at the front door (an interior spawn is just another x/z). snap:true = if blocked, nudge to the nearest free spot.
+   *   building      village building (west side of the road, numbered from the start): B1 first/closest ... B5 last/tallest (9.3 m)
+   *   raghunath  B1 (7x7 m, nearest the start)       -> "mechanic workshop"      kamla    B2 (small house with veranda) -> "village house"
+   *   arvind     B3 (shop front with sign board)     -> "clinic"                  chotu    B4 (large hall)               -> "abandoned school"
+   *   shyamlal   B5 (tallest, far end of the road)   -> "watchtower"              dev      behind B2/B3, west, off the road -> "hidden house"
+   *   saaya      far end behind B5; more encounter spots in saayaEncounters below (used by ?spawns markers now, by Phase 2 later) */
   const npcs = {
-    raghunath: { place: 'blacksmith = mechanic workshop (west row, south)', anchor: 'world', x:   0.6, z: 13.0, face: { to: 'spawn' }, snap: true },
-    kamla:     { place: 'small house (east row, north)', anchor: 'world', x:   5.2, z: 45.2, face: { to: 'spawn' }, snap: true },
-    arvind:    { place: 'general store = clinic (west row)', anchor: 'world', x:   0.5, z: 25.0, face: { to: 'spawn' }, snap: true },
-    chotu:     { place: 'church (end of the street)', anchor: 'world', x:   3.0, z: 56.5, face: { to: 'spawn' }, snap: true },
-    shyamlal:  { place: 'sheriff office (east row)', anchor: 'world', x:   5.6, z: 26.5, face: { to: 'spawn' }, snap: true },
-    dev:       { place: 'behind the east row (cabin / house)', anchor: 'world', x:  15.5, z: 50.0, face: { yaw: 270 }, snap: true },
-    saaya:     { place: 'supernatural encounter #1 (behind the church)', anchor: 'world', x:  3.5, z: 71.0, face: { to: 'spawn' }, snap: true }
+    raghunath: { place: 'mechanic workshop (B1)', anchor: 'world', x:   1.6, z: 14.0, face: { to: 'spawn' }, snap: true },
+    kamla:     { place: 'village house (B2)',     anchor: 'world', x:  -1.2, z: 22.0, face: { to: 'spawn' }, snap: true },
+    arvind:    { place: 'clinic (B3)',            anchor: 'world', x:  -0.6, z: 32.6, face: { to: 'spawn' }, snap: true },
+    chotu:     { place: 'abandoned school (B4)',  anchor: 'world', x:   2.6, z: 40.0, face: { to: 'spawn' }, snap: true },
+    shyamlal:  { place: 'watchtower (B5)',        anchor: 'world', x:   3.7, z: 57.0, face: { to: 'spawn' }, snap: true },
+    dev:       { place: 'hidden house (behind B2/B3)', anchor: 'world', x: -10.3, z: 28.4, face: { yaw: 90 }, snap: true },
+    saaya:     { place: 'supernatural encounter #1 (behind B5)', anchor: 'world', x: -3.5, z: 63.4, face: { to: 'spawn' }, snap: true }
   };
   // further SAAYA encounter points (world x,z + where she faces). Phase 1 only draws markers for them with ?spawns.
   const saayaEncounters = [
-    { x:  3.5, z: 71.0, face: { to: 'spawn' }, note: 'behind the church' },
-    { x:  3.0, z: 45.0, face: { yaw: 270 },    note: 'middle of the street, between hotel and house (seen at the edge of the torch beam)' },
-    { x: -12.0, z: 44.0, face: { yaw: 90 },    note: 'behind the hotel, west tree line' },
+    { x: -3.5, z: 63.4, face: { to: 'spawn' }, note: 'behind the last building' },
+    { x:  4.5, z: 47.0, face: { yaw: 270 },    note: 'road, between clinic and hall (seen at the edge of the torch beam)' },
+    { x: -9.5, z: 36.0, face: { yaw: 90 },     note: 'behind the clinic, west tree line' },
     { x:  2.0, z:  3.0, face: { to: 'spawn' }, note: 'road just south of the first building' }
   ];
 
@@ -133,14 +135,14 @@
     // abandoned cars on the road (same sedan file as the player's car, separate ?query = separate instance so car crumple edits are not shared)
     wrecks: [
       { id: 'wreck1', url: 'assets/vehicles/sedan.glb?wreck1', x: 4.0, z: 22, yaw: 78,  lengthM: 4.6, tilt: [0, 3], tint: 0.55, circles: [{ x: 0, z: -1.3, r: 0.95 }, { x: 0, z: 0, r: 0.95 }, { x: 0, z: 1.3, r: 0.95 }], footprint: 3 },
-      { id: 'wreck2', url: 'assets/vehicles/sedan.glb?wreck2', x: 5.4, z: 49,  yaw: 165, lengthM: 4.6, tilt: [2, -4], tint: 0.5,  circles: [{ x: 0, z: -1.3, r: 0.95 }, { x: 0, z: 0, r: 0.95 }, { x: 0, z: 1.3, r: 0.95 }], footprint: 3 }
+      { id: 'wreck2', url: 'assets/vehicles/sedan.glb?wreck2', x: 5.6, z: 63,  yaw: 165, lengthM: 4.6, tilt: [2, -4], tint: 0.5,  circles: [{ x: 0, z: -1.3, r: 0.95 }, { x: 0, z: 0, r: 0.95 }, { x: 0, z: 1.3, r: 0.95 }], footprint: 3 }
     ],
     // extra forest: clones of the hut model's own trees around the village so it sits in woods, not on an empty plain
     forest: {
       enabled: true, seed: 7, count: 90, interior: 10,
       area: [-62, 4, 66, 110],                 // x0,z0,x1,z1 where trees may appear
       open: [-14, 8, 38, 80],                  // inner rectangle kept free (village + road + props); `interior` trees are scattered inside anyway
-      keepOut: [[-15, 6, 18, 75], [-33, 30, -15, 47]],   // 2nd rect = cemetery (r21);   // never plant here (original village + road)
+      keepOut: [[-12, 8, 10, 76], [-33, 30, -15, 47]],   // 2nd rect = cemetery (r21);   // never plant here (original village + road)
       hutRadius: 18, minGap: 4.0, scale: [0.85, 1.25], propMargin: 4.5
     }
   };

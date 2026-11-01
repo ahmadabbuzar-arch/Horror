@@ -1,4 +1,4 @@
-*** r25 BUILD — the 5 old houses replaced by a Western street (docs/CHANGES_r25.md); r18 graphics selector, r21 cemetery unchanged; NOT tested in a browser ***
+*** r21 BUILD — graphics High/Medium/Low (r18), old graveyard removed (r20), NEW small cemetery with closed fence (r21); NOT tested in a browser ***
 No Three.js / network in the build sandbox. Verified offline: JS syntax, node tools/test_p1_logic.js (33), node tools/test_hut_ground.js (13),
 python3 tools/check_assets.py, and offline preview renders in screenshots/ (own renderer, NOT the game).
 Details + remaining issues: docs/CORRECTION_REPORT_r3.md
