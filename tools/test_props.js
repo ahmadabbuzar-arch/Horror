@@ -6,12 +6,14 @@ const T={Raycaster:class{set(){}intersectObjects(){return []}},Vector3:V3,Box3:c
 const w={THREE:T,console,location:{search:''},document:{}};w.window=w;w.P1={cfg:{car:{}},log(){},warn(){},info:{},status:{},assets:{}};
 vm.createContext(w);vm.runInContext(fs.readFileSync('js/p1-config.js','utf8'),w);vm.runInContext(fs.readFileSync('js/p1-props.js','utf8'),w);
 const P1=w.P1,C=P1.config.village;
-ok(C.props.length===4&&C.wrecks.length===2,'4 props (tower, windmill, gy_graves, gy_fence) + 2 wrecks configured');
-{const gv=C.props.find(c=>c.id==='gy_graves'),fe=C.props.find(c=>c.id==='gy_fence');
-ok(gv&&fe&&fe.walls,'r21: cemetery = graves + solid fence');
-ok(gv.circles.length===45,'r24: 15 graves x 3 collision circles');
-const vh=Math.hypot(gv.x-fe.x,gv.z-fe.z);ok(vh<0.6,'r22: graves stand inside the fence (centres within 60 cm)');
-ok(gv.x>-32&&gv.x<-15&&gv.z>30&&gv.z<46,'r21: cemetery stands west of the village houses');}
+ok(C.props.length===3&&C.wrecks.length===2,'3 props (tower, windmill, graveyard) + 2 wrecks configured');
+{const g=C.props.find(c=>c.id==='graveyard');
+ok(g&&!C.props.some(c=>/^gy_(graves|fence)$/.test(c.id)),'r29: old cemetery (graves + fence) is gone, replaced by ONE graveyard map');
+ok(g.origin&&g.scale===1&&g.climb&&g.floorRe==='gy_terrain'&&g.walls&&g.wallRe==='gy_tombs','r29: file is in metres, origin kept, terrain = floor, tombs = walls (tree canopy never ray-tested)');
+ok(g.circles.length>=8&&g.circles.every(k=>Math.abs(k.x)<3&&Math.abs(k.z)<3&&k.r>=0.15&&k.r<=0.5),'r29: tree trunk has collision circles near the map centre');
+ok(g.x>-33&&g.x<-20&&g.z>32&&g.z<44,'r29: graveyard stands west of the village houses');
+ok(g.x+11.7<-14&&g.x-13.1>-40,'r29: map (terrain +-11.63 m, canopy to -13 m) keeps >= 4 m clear of the village side (x > -10)');
+const ko=C.forest.keepOut[1];ok(ko[0]<=g.x-13&&ko[2]>=g.x+11.7&&ko[1]<=g.z-11.7&&ko[3]>=g.z+11.7,'r29: forest keep-out rectangle covers the whole map');}
 ok(!C.props.some(c=>/bunker/.test(c.id)),'r9: clinic bunker is gone');
 ok(!C.props.some(c=>/house|ruin|boat/.test(c.id)),'r8: American house, ruined log house and boat are gone');
 const tw=C.props.find(c=>c.id==='tower');ok(tw&&tw.climb&&tw.wallR<=0.35,'r8: tower is climbable (climb:true, narrow wall radius)');

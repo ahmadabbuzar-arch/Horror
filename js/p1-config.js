@@ -125,12 +125,15 @@
       { id: 'tower',    url: 'assets/props/watchtower.glb',    x: 13, z: 67, yaw: 20,  scale: 0.85, sink: 0.0, tint: 0.8, walls: true, climb: true, wallR: 0.18, footprint: 6 },
       // windmill in the east field
       { id: 'windmill', url: 'assets/props/windmill.glb',      x: 21, z: 28, yaw: 200, scale: 1.0, sink: 0.05, tint: 0.8, circles: [{ x: 0, z: 0, r: 1.9 }], footprint: 6 },
-      // r21 CEMETERY (small, west of the village houses, 12 m from the nearest house). Made by tools/make_cemetery.py from the 'cemetery' kitbash: 15 crooked graves (5 x 3 grid) (turned mounds, leaning / half-sunk headstones; r22) and a closed wooden fence on all four sides.
-      // Fenced area x -30.0..-18.0, z 32.65..43.65 (12 x 11 m, enlarged in r23). The gate is an open gap on the EAST side (toward the village), world z 37.75..40.55 (2.8 m wide, lintel on top). Both GLBs are in metres, origin = same point (-25.5, 34.65) -> x,z below = that origin + each model's bbox centre.
-      // Circles (local metres from the graves' centre) = headstones r 0.38 + 2 circles per mound r 0.55, 3 per grave = 45, so the player cannot walk through the graves.
-      { id: 'gy_graves', url: 'assets/props/cemetery.glb',       x: -24.44, z: 38.21, yaw: 0, scale: 1.0, sink: 0.0, tint: 0.8,
-        circles: [{ x: -4.11, z: -3.9, r: 0.55 }, { x: -3.94, z: -2.71, r: 0.55 }, { x: -4.22, z: -4.6, r: 0.38 }, { x: -2.19, z: -3.91, r: 0.55 }, { x: -2.09, z: -2.71, r: 0.55 }, { x: -2.23, z: -4.59, r: 0.38 }, { x: -0.33, z: -3.57, r: 0.55 }, { x: -0.09, z: -2.39, r: 0.55 }, { x: -0.53, z: -4.34, r: 0.38 }, { x: 2.12, z: -3.61, r: 0.55 }, { x: 1.87, z: -2.44, r: 0.55 }, { x: 2.3, z: -4.42, r: 0.38 }, { x: 3.93, z: -3.64, r: 0.55 }, { x: 3.83, z: -2.44, r: 0.55 }, { x: 3.98, z: -4.43, r: 0.38 }, { x: -4.01, z: -0.51, r: 0.55 }, { x: -3.95, z: 0.69, r: 0.55 }, { x: -4.29, z: -1.1, r: 0.38 }, { x: -1.82, z: -0.49, r: 0.55 }, { x: -2.03, z: 0.69, r: 0.55 }, { x: -1.62, z: -1.5, r: 0.38 }, { x: -0.14, z: -0.57, r: 0.55 }, { x: -0.19, z: 0.63, r: 0.55 }, { x: -0.08, z: -1.1, r: 0.38 }, { x: 2.19, z: -0.49, r: 0.55 }, { x: 1.96, z: 0.69, r: 0.55 }, { x: 2.29, z: -1.36, r: 0.38 }, { x: 4.06, z: -0.68, r: 0.55 }, { x: 4.09, z: 0.52, r: 0.55 }, { x: 3.94, z: -1.38, r: 0.38 }, { x: -3.87, z: 2.89, r: 0.55 }, { x: -3.96, z: 4.08, r: 0.55 }, { x: -3.88, z: 2.02, r: 0.38 }, { x: -2.09, z: 2.69, r: 0.55 }, { x: -2.27, z: 3.87, r: 0.55 }, { x: -1.67, z: 1.89, r: 0.38 }, { x: 0.13, z: 2.7, r: 0.55 }, { x: -0.03, z: 3.89, r: 0.55 }, { x: 0.1, z: 1.99, r: 0.38 }, { x: 1.93, z: 2.72, r: 0.55 }, { x: 1.74, z: 3.91, r: 0.55 }, { x: 1.99, z: 1.82, r: 0.38 }, { x: 4.06, z: 2.65, r: 0.55 }, { x: 3.9, z: 3.84, r: 0.55 }, { x: 4.16, z: 1.99, r: 0.38 }], footprint: 6 },
-      { id: 'gy_fence',  url: 'assets/props/cemetery_fence.glb', x: -23.97, z: 38.15, yaw: 0, scale: 1.0, sink: 0.02, tint: 0.75, walls: true, wallR: 0.4, encloses: true, footprint: 6 }
+      // r29 GRAVEYARD (replaces the r21 cemetery: the old 15 graves + wooden fence are gone). One GLB = the whole 'GRAVEYARD (HIGH QUALITY)' map: terrain + 15 tombs/headstones + the big bare jacaranda tree.
+      // Made by tools/prep_graveyard.py (scale 0.4: terrain 23.3 x 23.3 m, tree 19 m, tombs up to 1.9 m). The file is in METRES, y is up, the map centre is the model origin and the terrain border is exactly y = 0
+      // (= the game's ground plane), so  x,z  below is simply where the map CENTRE stands: west of the village (houses start at x = -9; the map's east edge is at x = -14.4; nearest NPC spot 4 m away).
+      //   origin:true  keep the model origin (no bounding-box re-centring)     sink:-0.03  lifts it 3 cm so the terrain never z-fights with the ground plane
+      //   climb + floorRe : only the terrain mesh is floor -> the player walks up / down its small hills (max 1.06 m)      walls + wallRe : only the tombs block the player (900 triangles, ray test)
+      //   circles : the tree stems at ground level (local metres from the map centre) so the player cannot walk through the trunk. The 126k-triangle canopy (y > 1.85 m) is never collision-tested.
+      { id: 'graveyard', url: 'assets/props/graveyard_map.glb', x: -26, z: 38, yaw: 0, scale: 1.0, sink: -0.03, tint: 0.85, origin: true,
+        climb: true, floorRe: 'gy_terrain', walls: true, wallRe: 'gy_tombs', wallR: 0.4,
+        circles: [{x: -0.57, z: -0.98, r: 0.18}, {x: -0.57, z: -0.69, r: 0.25}, {x: -0.21, z: -1.1, r: 0.28}, {x: -0.13, z: -0.57, r: 0.33}, {x: -0.22, z: -0.3, r: 0.24}, {x: 0.16, z: -0.62, r: 0.32}, {x: 0.22, z: -0.22, r: 0.28}, {x: 0.38, z: 0.03, r: 0.18}, {x: 0.66, z: -0.61, r: 0.27}, {x: 0.62, z: -0.24, r: 0.3}, {x: 0.68, z: 0.07, r: 0.23}, {x: 1.06, z: -0.52, r: 0.19}, {x: 1.05, z: -0.21, r: 0.29}, {x: 0.99, z: 0.08, r: 0.18}], footprint: 14 }
     ],
     // abandoned cars on the road (same sedan file as the player's car, separate ?query = separate instance so car crumple edits are not shared)
     wrecks: [
@@ -142,7 +145,7 @@
       enabled: true, seed: 7, count: 90, interior: 10,
       area: [-62, 4, 66, 110],                 // x0,z0,x1,z1 where trees may appear
       open: [-14, 8, 38, 80],                  // inner rectangle kept free (village + road + props); `interior` trees are scattered inside anyway
-      keepOut: [[-12, 8, 10, 76], [-33, 30, -15, 47]],   // 2nd rect = cemetery (r21);   // never plant here (original village + road)
+      keepOut: [[-12, 8, 10, 76], [-41, 24, -12.5, 52]],   // 2nd rect = graveyard map (r29: centre -26,38, +-11.6 m terrain, canopy to -39);   // never plant here (original village + road)
       hutRadius: 18, minGap: 4.0, scale: [0.85, 1.25], propMargin: 4.5
     }
   };

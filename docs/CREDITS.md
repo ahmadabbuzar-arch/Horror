@@ -24,3 +24,7 @@
 - r5: 6 props from user uploads (watchtower, windmill, clinic/bunker; boat wreck, ruined log house and farmstead house were removed in r8). Author/licence unknown for all -> fill in.
 
 4. **r13: the new windmill is also CC-BY-NC-4.0 (non-commercial).**
+
+## r29 — graveyard map (assets/props/graveyard_map.glb)
+"GRAVEYARD (HIGH QUALITY)" by lorem Models (https://sketchfab.com/Afthab333) — https://sketchfab.com/3d-models/graveyard-high-quality-269657010acc4f0ebcf71fcf50fd454f — licence CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/).
+Modified: node transforms baked, converted to metres, terrain levelled to the game ground, tree + textures reduced for mobile (tools/prep_graveyard.py).

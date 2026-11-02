@@ -13,3 +13,6 @@ index.html: on phones the "Khelo" button now enters fullscreen and locks landsca
 
 ## r27 — more horror
 Fog density 0.030 -> 0.062 (visibility ~40 m instead of ~100 m) with slow thickening waves, denser/taller mist (12-34 sprites), darker ambient light (0.95 -> 0.72), dark vignette on screen edges. Tune: FOG_BASE in js/atmo.js (0.045 = lighter, 0.08 = very thick), HemisphereLight intensity + #vig in index.html.
+
+## r28 — realistic fog
+The mist sprites (camera-facing, rotated cards) looked like vertical light beams. Replaced by 2/4/6 (Low/Medium/High) stacked horizontal fog layers with procedural noise in a shader (world-space, drifting with wind, fading with distance, off indoors). No texture file needed. Tune in js/atmo.js: PRESET.layers (more = thicker/softer, heavier on GPU), uDens (opacity per layer), uCol (fog tint), MIST_FRAG smoothstep(0.30,0.78) (higher first number = fewer, more separate banks).

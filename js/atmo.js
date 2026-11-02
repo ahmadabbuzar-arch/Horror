@@ -7,33 +7,15 @@
   const T = THREE;
   const A = (window.ATMO = { ready: false });
   // quality presets: stars, mist sprites, dome clouds on/off
-  const PRESET = { high: { stars: 1100, mist: 34, clouds: true }, medium: { stars: 650, mist: 24, clouds: true }, low: { stars: 350, mist: 12, clouds: false } };
+  const PRESET = { high: { stars: 1100, layers: 6, clouds: true }, medium: { stars: 650, layers: 4, clouds: true }, low: { stars: 350, layers: 2, clouds: false } };
   const FOG_COL = 0x0e1524, FOG_BASE = 0.062;   // r27: much denser (visibility ~40 m, far trees vanish into the dark)
   const MOON_DIR = new T.Vector3(-0.55, 0.50, 0.38).normalize();
   const R_SKY = 100, MIST_R = 22;
   let scene, dome, stars, moon, glow, mist = [], P, fog, tU = { value: 0 }, pr = 1;
-  const WIND = new T.Vector3(0.45, 0, 0.16);
-
+  
   function cv(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
   function rnd(a, b) { return a + Math.random() * (b - a); }
 
-  // soft cloudy puff texture (several overlapping radial blobs)
-  function puffTex(seed) {
-    const c = cv(128, 128), x = c.getContext('2d');
-    let s = seed * 9301 + 49297;
-    const r = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
-    for (let i = 0; i < 9; i++) {
-      const px = 28 + r() * 72, py = 40 + r() * 48, rad = 22 + r() * 30;
-      const g = x.createRadialGradient(px, py, 0, px, py, rad);
-      g.addColorStop(0, 'rgba(255,255,255,0.55)'); g.addColorStop(0.5, 'rgba(255,255,255,0.22)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-      x.fillStyle = g; x.fillRect(0, 0, 128, 128);
-    }
-    // fade edges so the quad border is never visible
-    const m = x.createRadialGradient(64, 64, 20, 64, 64, 64);
-    m.addColorStop(0, 'rgba(0,0,0,0)'); m.addColorStop(1, 'rgba(0,0,0,1)');
-    x.globalCompositeOperation = 'destination-out'; x.fillStyle = m; x.fillRect(0, 0, 128, 128);
-    const t = new T.CanvasTexture(c); return t;
-  }
   function moonTex() {
     const c = cv(256, 256), x = c.getContext('2d');
     x.beginPath(); x.arc(128, 128, 100, 0, 7); x.closePath();
@@ -124,21 +106,38 @@
     g.add(gm, mm); g.frustumCulled = false; return g;
   }
 
-  /* ---------------------------------------------------------------- ground mist */
+  /* ---------------------------------------------------------------- ground mist (r28)
+   * Stacked horizontal fog layers (a few big planes at different heights that follow the player) with PROCEDURAL noise in the shader.
+   * The noise is sampled in WORLD space, so the fog banks stay in place and slowly drift with the wind; they thin out with distance and
+   * fade near the camera. No sprites -> no light-beam / card look, no hard edges, no texture file needed. */
+  const MIST_VERT = 'varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.0);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}';
+  const MIST_FRAG = [
+    'varying vec3 vW;uniform float uT;uniform vec3 uCam;uniform float uSeed;uniform float uDens;uniform float uFade;uniform vec3 uCol;',
+    'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+    'float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}',
+    'float fbm(vec2 p){float a=0.5,s=0.0;for(int i=0;i<4;i++){s+=a*n(p);p=p*2.07+vec2(17.0,5.0);a*=0.5;}return s;}',
+    'void main(){',
+    ' vec2 p=vW.xz*0.085+vec2(uSeed*13.0,uSeed*7.0);',
+    ' vec2 wind=vec2(uT*0.030,uT*0.011)*(0.6+uSeed*0.35);',
+    ' float a=fbm(p+wind);float b=fbm(p*1.9-wind*1.4+vec2(5.2,1.3));',
+    ' float m=smoothstep(0.30,0.78,a*0.62+b*0.46);',
+    ' float d=length(vW.xz-uCam.xz);',
+    ' float rad=1.0-smoothstep(12.0,34.0,d);',
+    ' float near=smoothstep(0.8,4.5,d);',
+    ' float al=m*uDens*rad*near*uFade;',
+    ' gl_FragColor=vec4(uCol*(0.85+0.3*m),al);}'
+  ].join('\n');
   function makeMist() {
-    const texs = [puffTex(1), puffTex(2), puffTex(3)];
-    for (let i = 0; i < P.mist; i++) {
-      const m = new T.SpriteMaterial({ map: texs[i % 3], color: 0x9fb0cc, transparent: true, depthWrite: false, opacity: 0, rotation: rnd(0, 6.28), fog: true });
-      const s = new T.Sprite(m);
-      const w = rnd(8, 14); s.scale.set(w, w * rnd(0.32, 0.5), 1);
-      s.userData = { base: rnd(0.24, 0.42), h: rnd(0.1, 2.0), rot: rnd(-0.03, 0.03), ph: rnd(0, 6.28), sp: rnd(0.6, 1.4) };
-      s.renderOrder = 2; s.frustumCulled = false;
-      scene.add(s); mist.push(s);
+    const L = P.layers;
+    for (let i = 0; i < L; i++) {
+      const u = { uT: tU, uCam: { value: new T.Vector3() }, uSeed: { value: i * 1.37 + 0.5 }, uDens: { value: 0.62 / Math.sqrt(L) }, uFade: { value: 1 },
+                  uCol: { value: new T.Vector3(0.36, 0.43, 0.56) } };
+      const mat = new T.ShaderMaterial({ uniforms: u, vertexShader: MIST_VERT, fragmentShader: MIST_FRAG, transparent: true, depthWrite: false, depthTest: true, fog: false, side: T.DoubleSide });
+      const m = new T.Mesh(new T.PlaneGeometry(80, 80, 1, 1), mat);
+      m.rotation.x = -Math.PI / 2; m.renderOrder = 2; m.frustumCulled = false;
+      m.userData = { u: u, dy: 0.10 + (L > 1 ? i * (1.12 / (L - 1)) : 0.3) };
+      scene.add(m); mist.push(m);
     }
-  }
-  function placeMist(s, c, ring) {
-    const a = Math.random() * 6.283, r = ring ? rnd(MIST_R * 0.7, MIST_R * 0.95) : Math.sqrt(Math.random()) * MIST_R;
-    s.position.x = c.x + Math.cos(a) * r; s.position.z = c.z + Math.sin(a) * r;
   }
 
   /* ---------------------------------------------------------------- API */
@@ -170,20 +169,10 @@
       // mist off indoors (smooth), on outdoors
       A.mistFade += ((indoor ? 0 : 1) - A.mistFade) * Math.min(1, dt * 2.5);
       const base = gy || 0;
-      for (const s of mist) {
-        const u = s.userData;
-        if (!u.init) { placeMist(s, cp, false); u.init = true; }
-        s.position.x += (WIND.x * u.sp + Math.sin(t * 0.21 + u.ph) * 0.12) * dt;
-        s.position.z += (WIND.z * u.sp + Math.cos(t * 0.17 + u.ph) * 0.12) * dt;
-        s.position.y = base + u.h + Math.sin(t * 0.3 + u.ph) * 0.12;
-        s.material.rotation += u.rot * dt;
-        const dx = s.position.x - cp.x, dz = s.position.z - cp.z, d = Math.hypot(dx, dz);
-        if (d > MIST_R) placeMist(s, cp, true);
-        const dc = tmp.copy(s.position).sub(cp).length();
-        const nearF = Math.min(1, Math.max(0, (dc - 1.5) / 4.5));              // no puffs flashing in front of the lens
-        const farF = Math.min(1, Math.max(0, (MIST_R - d) / 7));                // smooth appear / vanish at the edge
-        const pulse = 0.8 + 0.2 * Math.sin(t * 0.4 + u.ph);
-        s.material.opacity = u.base * nearF * farF * pulse * A.mistFade;
+      for (const m of mist) {
+        const u = m.userData.u;
+        m.position.set(cp.x, base + m.userData.dy + Math.sin(t * 0.2 + m.userData.dy * 5) * 0.05, cp.z);
+        u.uCam.value.copy(cp); u.uFade.value = A.mistFade;
       }
     } catch (e) { console.warn('[atmo] update failed, disabled', e); A.ready = false; }
   };

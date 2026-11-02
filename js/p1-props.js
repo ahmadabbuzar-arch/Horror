@@ -38,7 +38,8 @@
     const s = c.lengthM ? c.lengthM / Math.max(sz.x, sz.z) : (c.scale || 1);
     const inner = new T.Group(); inner.add(model);
     // baseY (model units) = level that must touch the ground; default = lowest vertex. The farmstead scan is a terrain chunk whose lowest point is 1.6 m below the house floor.
-    model.position.set(-(box0.min.x + box0.max.x) / 2, -(c.baseY != null ? c.baseY : box0.min.y), -(box0.min.z + box0.max.z) / 2);
+    // r29: origin:true = the GLB is already authored around its own origin with ground at y=0 (graveyard_map.glb) -> keep it, do not re-centre on the bounding box (the tree canopy reaches past the terrain on one side)
+    model.position.set(c.origin ? 0 : -(box0.min.x + box0.max.x) / 2, -(c.baseY != null ? c.baseY : (c.origin ? 0 : box0.min.y)), c.origin ? 0 : -(box0.min.z + box0.max.z) / 2);
     inner.scale.setScalar(s);
     if (c.tilt) { inner.rotation.x = c.tilt[0] * DEG; inner.rotation.z = c.tilt[1] * DEG; }
     const holder = new T.Group(); holder.add(inner);
@@ -47,15 +48,20 @@
     e.holder = holder; e.scale = s;
     e.meshes = []; e.floors = [];
     const wb = new T.Box3(), tmp = new T.Box3();
+    const floorRe = c.floorRe ? new RegExp(c.floorRe, 'i') : null, wallRe = c.wallRe ? new RegExp(c.wallRe, 'i') : null;
     model.traverse(function (o) {
       if (!o.isMesh || !o.visible) return;
       if (!o.geometry.boundingBox) o.geometry.computeBoundingBox();
       tmp.copy(o.geometry.boundingBox).applyMatrix4(o.matrixWorld);
       wb.union(tmp);
-      if (c.climb) e.floors.push(o);     // r8: stairs / platforms the player can stand on (see P1.propFloors)
+      const nm = (o.name || '') + ' ' + [].concat(o.material).map(function (m) { return m && m.name || ''; }).join(' ');
+      if (c.climb && (!floorRe || floorRe.test(nm))) e.floors.push(o);     // r8: stairs / platforms the player can stand on (see P1.propFloors). r29: floorRe = only these meshes (graveyard: the terrain)
       if (c.walls) {
-        const d = tmp.getSize(new T.Vector3());
-        if (d.y < 1.2 && Math.max(d.x, d.z) > 6) return;     // flat ground-like mesh: not a wall
+        if (wallRe) { if (!wallRe.test(nm)) return; }                       // r29: wallRe = only these meshes block the player (graveyard: tombs; the tree trunk uses circles, the 150k-triangle canopy must never be ray-tested)
+        else {
+          const d = tmp.getSize(new T.Vector3());
+          if (d.y < 1.2 && Math.max(d.x, d.z) > 6) return;     // flat ground-like mesh: not a wall
+        }
         e.meshes.push(o);
       }
     });
