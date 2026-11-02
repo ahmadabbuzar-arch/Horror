@@ -128,10 +128,10 @@
       // r29 GRAVEYARD (replaces the r21 cemetery: the old 15 graves + wooden fence are gone). One GLB = the whole 'GRAVEYARD (HIGH QUALITY)' map: terrain + 15 tombs/headstones + the big bare jacaranda tree.
       // Made by tools/prep_graveyard.py (scale 0.4: terrain 23.3 x 23.3 m, tree 19 m, tombs up to 1.9 m). The file is in METRES, y is up, the map centre is the model origin and the terrain border is exactly y = 0
       // (= the game's ground plane), so  x,z  below is simply where the map CENTRE stands: west of the village (houses start at x = -9; the map's east edge is at x = -14.4; nearest NPC spot 4 m away).
-      //   origin:true  keep the model origin (no bounding-box re-centring)     sink:-0.03  lifts it 3 cm so the terrain never z-fights with the ground plane
-      //   climb + floorRe : only the terrain mesh is floor -> the player walks up / down its small hills (max 1.06 m)      walls + wallRe : only the tombs block the player (900 triangles, ray test)
+      //   origin:true  keep the model origin (no bounding-box re-centring)     sink:-0.015  lifts it 1.5 cm so the terrain never z-fights with the ground plane
+      //   climb + floorRe : only the terrain mesh is floor -> the player walks up / down its small hills (gentle swells, max 0.26 m - r29b: flat like the ground, it used to look like a raised plate)      walls + wallRe : only the tombs block the player (900 triangles, ray test)
       //   circles : the tree stems at ground level (local metres from the map centre) so the player cannot walk through the trunk. The 126k-triangle canopy (y > 1.85 m) is never collision-tested.
-      { id: 'graveyard', url: 'assets/props/graveyard_map.glb', x: -26, z: 38, yaw: 0, scale: 1.0, sink: -0.03, tint: 0.85, origin: true,
+      { id: 'graveyard', url: 'assets/props/graveyard_map.glb', x: -26, z: 38, yaw: 0, scale: 1.0, sink: -0.015, tint: 0.85, origin: true,
         climb: true, floorRe: 'gy_terrain', walls: true, wallRe: 'gy_tombs', wallR: 0.4,
         circles: [{x: -0.57, z: -0.98, r: 0.18}, {x: -0.57, z: -0.69, r: 0.25}, {x: -0.21, z: -1.1, r: 0.28}, {x: -0.13, z: -0.57, r: 0.33}, {x: -0.22, z: -0.3, r: 0.24}, {x: 0.16, z: -0.62, r: 0.32}, {x: 0.22, z: -0.22, r: 0.28}, {x: 0.38, z: 0.03, r: 0.18}, {x: 0.66, z: -0.61, r: 0.27}, {x: 0.62, z: -0.24, r: 0.3}, {x: 0.68, z: 0.07, r: 0.23}, {x: 1.06, z: -0.52, r: 0.19}, {x: 1.05, z: -0.21, r: 0.29}, {x: 0.99, z: 0.08, r: 0.18}], footprint: 14 }
     ],

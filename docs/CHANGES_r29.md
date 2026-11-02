@@ -26,3 +26,8 @@ The map = terrain (23.3 x 23.3 m) + 15 tombs / headstones in a ring + the big ba
 * Bigger / smaller map: `python3 tools/prep_graveyard.py graveyard_high_quality.glb assets/props/graveyard_map.glb --scale 0.5` (0.4 default; at 0.5 the tree is 24 m and the terrain 29 m — then move `x` to about -29 and widen `keepOut`). The tree-trunk circles are printed by the script, paste them into `circles`.
 * Shipped with: `--branch-cell 0.5 --trunk-tris 20000 --no-branch-normals --terrain-tex 1024` (keeps the whole game zip under 25 MB). More detail: `--branch-cell 0.15 --trunk-tris 45000 --terrain-tex 2048` (8.8 MB, 210k tris).
 * Different spot: change `x`, `z`, `yaw` of `graveyard` in `js/p1-config.js` (+ the 2nd `keepOut` rectangle).
+
+## r29b — "graveyard sits above the ground" + fog
+* **Terrain relief 25 %** (`--relief 0.25`): the interior used to rise 0.1-0.7 m above the game ground, so from outside the map looked like a raised plate. Now 0.00-0.26 m, border blended over 3.6 m (`--margin 9`) and its vertex colour darkened towards the border (`--edge-dark 0.6`) so it fades into the dark gravel instead of a bright square.
+* **Tombs** are moved down as a whole when they would float (before, only their bottom vertices were pulled down, which stretched the concrete texture into vertical streaks). `sink` -0.03 -> -0.015.
+* **Fog** (`js/atmo.js`): the 2-6 stacked mist sheets were bright blue (0.36,0.43,0.56) at density 0.62 and looked like a flat glowing floor. Now colour (0.17,0.21,0.30), density 0.34. `FOG_COL / FOG_BASE` (distance fog) untouched. `?nomist` in the URL switches the sheets off for comparison.

@@ -25,7 +25,9 @@ ap = argparse.ArgumentParser()
 ap.add_argument('src'); ap.add_argument('dst')
 ap.add_argument('--scale', type=float, default=0.4, help='model units -> metres')
 ap.add_argument('--ground', type=float, default=1.75, help='model-unit height that becomes y=0 (edge level of the terrain)')
-ap.add_argument('--margin', type=float, default=5.0, help='model units: width of the border strip that is blended down to --ground')
+ap.add_argument('--relief', type=float, default=0.25, help='fraction of the original hill height that is kept (1 = original; 0.25 = a flat ground with gentle swells, max ~0.25 m)')
+ap.add_argument('--edge-dark', type=float, default=0.6, help='terrain vertex-colour brightness at the border (1 = no darkening) so the map blends into the game ground')
+ap.add_argument('--margin', type=float, default=9.0, help='model units: width of the border strip that is blended down to --ground')
 ap.add_argument('--tex', type=int, default=1024); ap.add_argument('--terrain-tex', type=int, default=2048)
 ap.add_argument('--no-branch-normals', action='store_true', help='drop NORMAL from the thin branches (three.js then shades them flat) -> ~1 MB smaller')
 ap.add_argument('--trunk-tris', type=int, default=45000); ap.add_argument('--branch-cell', type=float, default=0.15)
@@ -96,7 +98,7 @@ half = max(xmax, -xmin, zmax, -zmin)
 dist = half - np.maximum(np.abs(G[:, :, 0]), np.abs(G[:, :, 2]))            # distance to the map border
 w = np.clip(dist / M, 0, 1); w = w * w * (3 - 2 * w)                          # smoothstep: 0 at the border, 1 inside
 y_raw = G[:, :, 1].copy()
-y = H0 + (np.maximum(y_raw, H0) - H0) * w                                     # lift hollows to H0, blend the border to H0
+y = H0 + (np.maximum(y_raw, H0) - H0) * a.relief * w                       # lift hollows to H0, keep only --relief of the hills, blend the border to H0
 G[:, :, 1] = y
 print('terrain %dx%d  raw y %.2f..%.2f  -> %.2f..%.2f (ground %.2f); lifted %.0f%% of vertices' % (n, n, y_raw.min(), y_raw.max(), y.min(), y.max(), H0, 100 * float((y_raw < H0).mean())))
 def height_at(x, z):                                                           # bilinear, model units
@@ -114,6 +116,7 @@ if gn[:, 1].mean() < 0: TI = TI[:, [0, 2, 1]]; gn = -gn                      # m
 TN = np.zeros_like(TP)
 for k in range(3): np.add.at(TN, TI[:, k], gn)
 TN /= np.linalg.norm(TN, axis=1, keepdims=True) + 1e-12
+TC = np.repeat((a.edge_dark + (1 - a.edge_dark) * np.clip(dist.reshape(-1) / (M * 1.6), 0, 1))[:, None], 3, 1)   # r29b: darker towards the border
 print('terrain normals: mean y %.3f (must be > 0.9 = faces up), tris %d' % (TN[:, 1].mean(), len(TI)))
 assert TN[:, 1].mean() > 0.9
 
@@ -125,10 +128,9 @@ for p in parts[MAT['tombs']]:
     gg = np.array(np.meshgrid(gx, gz)).reshape(2, -1)
     t_low = float(height_at(gg[0], gg[1]).min())
     ext = ymin > t_low - 0.05
-    if ext:
-        low = P[:, 1] < ymin + 0.06; P[low, 1] = t_low - 0.4
+    if ext: P[:, 1] -= (ymin - (t_low - 0.12))      # r29b: move the WHOLE tomb down (rigid) - pulling only the bottom vertices stretched the concrete texture into vertical streaks
     slabs.append(dict(name=p['name'], ymin0=float(ymin), terrain_min=t_low, extended=bool(ext), bb=(P.min(0).tolist(), P.max(0).tolist())))
-print('tombs: %d, bottoms extended into the ground: %d' % (len(slabs), sum(s['extended'] for s in slabs)))
+print('tombs: %d, sunk into the ground (rigid): %d' % (len(slabs), sum(s['extended'] for s in slabs)))
 
 # ------------------------------------------------------------------ vertex clustering (tree)
 def merge(prims):
@@ -167,7 +169,7 @@ tomb = merge(parts[MAT['tombs']])
 # ------------------------------------------------------------------ to metres, ground = y 0
 def fin(P): Q = P.copy(); Q[:, 1] -= H0; return Q * S
 meshes = {
-    'gy_terrain':  (fin(TP), TN, TU, TI, 'terrain'),
+    'gy_terrain':  (fin(TP), TN, TU, TI, 'terrain', TC),
     'gy_tombs':    (fin(tomb[0]), tomb[1], tomb[2], tomb[3], 'tombs'),
     'gy_trunk':    (fin(trunk[0]), trunk[1], trunk[2], trunk[3], 'trunk'),
     'gy_branches': (fin(branches[0]), branches[1], branches[2], branches[3], 'branches')}
@@ -205,7 +207,7 @@ def add_acc(arr, ct, typ, target, mm=False):
     if mm: ac['min'] = arr.min(0).tolist(); ac['max'] = arr.max(0).tolist()
     AC.append(ac); return len(AC) - 1
 images, textures, materials, gmeshes, nodes = [], [], [], [], []
-for mi, (name, (P, N, U, I, key)) in enumerate(meshes.items()):
+for mi, (name, (P, N, U, I, key, *extra)) in enumerate(meshes.items()):
     data = tex(base_img[key], a.terrain_tex if key == 'terrain' else a.tex, 85)
     images.append({'bufferView': add_bv(data), 'mimeType': 'image/jpeg', 'name': key}); textures.append({'sampler': 0, 'source': mi})
     materials.append({'name': 'gy_' + key, 'doubleSided': True, 'pbrMetallicRoughness': {'baseColorTexture': {'index': mi}, 'metallicFactor': 0.0, 'roughnessFactor': 1.0}})
@@ -213,6 +215,7 @@ for mi, (name, (P, N, U, I, key)) in enumerate(meshes.items()):
     at = {'POSITION': add_acc(P.astype('<f4'), 5126, 'VEC3', 34962, True)}
     if not (a.no_branch_normals and key == 'branches'): at['NORMAL'] = add_acc(N.astype('<f4'), 5126, 'VEC3', 34962)
     at['TEXCOORD_0'] = add_acc(U.astype('<f4'), 5126, 'VEC2', 34962)
+    if extra: at['COLOR_0'] = add_acc(extra[0].astype('<f4'), 5126, 'VEC3', 34962)
     ia = add_acc(I.reshape(-1).astype('<u4' if big else '<u2').reshape(-1, 1), 5125 if big else 5123, 'SCALAR', 34963)
     gmeshes.append({'name': name, 'primitives': [{'attributes': at, 'indices': ia, 'material': mi}]}); nodes.append({'name': name, 'mesh': mi})
 doc = {'asset': {'version': '2.0', 'generator': 'tools/prep_graveyard.py', 'extras': {'source': 'GRAVEYARD (HIGH QUALITY) by lorem Models (https://sketchfab.com/Afthab333), CC-BY-4.0', 'scale': S, 'ground': H0}},

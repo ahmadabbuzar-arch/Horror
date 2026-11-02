@@ -130,8 +130,8 @@
   function makeMist() {
     const L = P.layers;
     for (let i = 0; i < L; i++) {
-      const u = { uT: tU, uCam: { value: new T.Vector3() }, uSeed: { value: i * 1.37 + 0.5 }, uDens: { value: 0.62 / Math.sqrt(L) }, uFade: { value: 1 },
-                  uCol: { value: new T.Vector3(0.36, 0.43, 0.56) } };
+      const u = { uT: tU, uCam: { value: new T.Vector3() }, uSeed: { value: i * 1.37 + 0.5 }, uDens: { value: 0.34 / Math.sqrt(L) }       /* r29b: was 0.62 - the bright blue sheets read as a flat veil on the ground */, uFade: { value: 1 },
+                  uCol: { value: new T.Vector3(0.17, 0.21, 0.30) } };
       const mat = new T.ShaderMaterial({ uniforms: u, vertexShader: MIST_VERT, fragmentShader: MIST_FRAG, transparent: true, depthWrite: false, depthTest: true, fog: false, side: T.DoubleSide });
       const m = new T.Mesh(new T.PlaneGeometry(80, 80, 1, 1), mat);
       m.rotation.x = -Math.PI / 2; m.renderOrder = 2; m.frustumCulled = false;
