@@ -17,6 +17,7 @@
     guard(function () { const bad = P1.startCharacters(world); if (bad && bad.length) world.notify('⚠ P1 config: ' + bad.length + ' problem(s) — console dekho'); }, 'characters start');
     guard(function () { P1.loadCar(world); }, 'car start');
     guard(function () { P1.startProps(world); }, 'props start');
+    guard(function () { P1.startClinicAudio(world); }, 'clinic/audio start');
     guard(function () { P1.startGate(world); }, 'gate start');   // r30: graveyard fence + openable gate
     P1.log('started (' + P1.VERSION + ')' + (P1.cfg.gallery ? ' [gallery]' : '') + (P1.cfg.debug ? ' [debug]' : ''));
   };
