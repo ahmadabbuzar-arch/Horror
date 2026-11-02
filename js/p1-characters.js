@@ -366,15 +366,22 @@
   }
 
   function fail(slot, e) {
-    slot.status = 'error'; P1.status[slot.cfg.id] = 'error: ' + e.message;
     console.error('[P1] ' + slot.cfg.id, e);
-    if (world && world.notify) world.notify('⚠ ' + slot.cfg.label + ' load nahi hua (console dekho)');
+    slot.fails = (slot.fails || 0) + 1;
+    // r29c: a single failed download / build used to leave the NPC in 'error' for the whole session (only 'idle' slots are ever loaded). Retry twice (3 s, 6 s) before giving up - phones drop requests while the big village / props load.
+    if (slot.fails <= 2) {
+      slot.status = 'retry'; P1.status[slot.cfg.id] = 'retry ' + slot.fails + ': ' + e.message;
+      setTimeout(function () { if (slot.status === 'retry') { slot.status = 'idle'; P1.status[slot.cfg.id] = 'idle'; } }, 3000 * slot.fails);
+      return;
+    }
+    slot.status = 'error'; P1.status[slot.cfg.id] = 'error: ' + e.message;
+    if (world && world.notify) { slot.noticed = true; world.notify('⚠ ' + slot.cfg.label + ' load nahi hua: ' + String(e && e.message || e).slice(0, 90)); }
   }
   function load(slot) {
     slot.status = 'loading'; P1.status[slot.cfg.id] = 'loading'; slot.cancel = false;
     P1.assets.acquire(slot.cfg.url).then(function (g) {
       if (slot.cancel) { P1.assets.release(slot.cfg.url); slot.status = 'idle'; P1.status[slot.cfg.id] = 'idle'; slot.cancel = false; return; }
-      try { build(slot, g); slot.status = 'ready'; P1.status[slot.cfg.id] = 'ready'; P1.log('ready ' + slot.cfg.id, P1.info[slot.cfg.id]); }
+      try { build(slot, g); slot.status = 'ready'; slot.fails = 0; P1.status[slot.cfg.id] = 'ready'; P1.log('ready ' + slot.cfg.id, P1.info[slot.cfg.id]); if (slot.noticed && world && world.notify) { slot.noticed = false; world.notify(''); } }
       catch (e) { P1.assets.release(slot.cfg.url); fail(slot, e); }
     }).catch(function (e) { fail(slot, e); });   // download/parse failure: the manager already dropped the cache entry
   }
