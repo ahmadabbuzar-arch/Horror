@@ -62,6 +62,7 @@ body.portrait #rot{display:flex}
 <script src="js/p1-characters.js"></script>
 <script src="js/p1-car.js"></script>
 <script src="js/p1-props.js"></script>
+<script src="js/p1-gate.js"></script>
 <script src="js/p1-drive.js"></script>
 <script src="js/p1-main.js"></script>
 <script>
@@ -250,7 +251,7 @@ function goVillage(){const d=doors[0];if(!d)return;pos.set(d.x+2.2,0,d.z);gy=0;y
 function toggleDoor(){if(nearDoor){nearDoor.t=nearDoor.t?0:1;showDoor(true)}}
 function showDoor(force){
   let nd=null,bd=3.6;for(const d of doors){const q=Math.hypot(pos.x-d.x,pos.z-d.z);if(q<bd){bd=q;nd=d}}
-  if(nd!==nearDoor||force){nearDoor=nd;const b=$('dr');b.style.display=nd?'block':'none';if(nd){const k=touch?'':' (E)';b.textContent=(nd.isCar?(nd.t?'🚗 Car door band karo':'🚗 Car door kholo'):(nd.t?'🚪 Door band karo':'🚪 Door kholo'))+k}}
+  if(nd!==nearDoor||force){nearDoor=nd;const b=$('dr');b.style.display=nd?'block':'none';if(nd){const k=touch?'':' (E)';b.textContent=(nd.label?(nd.t?nd.label[1]:nd.label[0]):nd.isCar?(nd.t?'🚗 Car door band karo':'🚗 Car door kholo'):(nd.t?'🚪 Door band karo':'🚪 Door kholo'))+k}}
 }
 function carBlocked(x,z,dx,dz,len){ // r7: car ke liye deewar/hut ray-test (3 rays: beech + dono side)
   const d=new THREE.Vector3(dx,0,dz).normalize(),n=new THREE.Vector3(-d.z,0,d.x),nearHut=Math.hypot(x-cc.x,z-cc.z)<14;

@@ -7,7 +7,7 @@
   const T = THREE;
   const A = (window.ATMO = { ready: false });
   // quality presets: stars, mist sprites, dome clouds on/off
-  const PRESET = { high: { stars: 1100, layers: 6, clouds: true }, medium: { stars: 650, layers: 4, clouds: true }, low: { stars: 350, layers: 2, clouds: false } };
+  const PRESET = { high: { stars: 1100, puffs: 64, clouds: true }, medium: { stars: 650, puffs: 40, clouds: true }, low: { stars: 350, puffs: 22, clouds: false } };
   const FOG_COL = 0x0e1524, FOG_BASE = 0.062;   // r27: much denser (visibility ~40 m, far trees vanish into the dark)
   const MOON_DIR = new T.Vector3(-0.55, 0.50, 0.38).normalize();
   const R_SKY = 100, MIST_R = 22;
@@ -106,38 +106,75 @@
     g.add(gm, mm); g.frustumCulled = false; return g;
   }
 
-  /* ---------------------------------------------------------------- ground mist (r28)
-   * Stacked horizontal fog layers (a few big planes at different heights that follow the player) with PROCEDURAL noise in the shader.
-   * The noise is sampled in WORLD space, so the fog banks stay in place and slowly drift with the wind; they thin out with distance and
-   * fade near the camera. No sprites -> no light-beam / card look, no hard edges, no texture file needed. */
-  const MIST_VERT = 'varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.0);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}';
-  const MIST_FRAG = [
-    'varying vec3 vW;uniform float uT;uniform vec3 uCam;uniform float uSeed;uniform float uDens;uniform float uFade;uniform vec3 uCol;',
-    'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
-    'float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}',
-    'float fbm(vec2 p){float a=0.5,s=0.0;for(int i=0;i<4;i++){s+=a*n(p);p=p*2.07+vec2(17.0,5.0);a*=0.5;}return s;}',
+  /* ---------------------------------------------------------------- ground smoke (r30)
+   * r28 used 2-6 big flat stacked planes -> they showed up as a straight horizontal line / flat sheet.
+   * Now: SMOKE PUFFS. ONE InstancedMesh (one draw call) of soft cloud-textured camera-facing quads. Every puff slowly RISES a little (grows, gets thinner)
+   * and then SINKS back down (shrinks, thicker) in its own rhythm, sways sideways and drifts with the wind. All motion is computed on the GPU
+   * (no per-frame CPU work). Puffs are wrapped around the player, so they stay in the world while you walk and never pop in front of the camera.
+   * Soft edges everywhere: fades near the ground (no hard cut where it meets the terrain), near the camera, and at the far ring.
+   * Cost: 1 draw call, 1 texture fetch per pixel, alpha is low. Tune PRESET.puffs (count) and DENS / SIZE below. */
+  const PUFF_R = 26, DENS = 0.34, SIZE = [3.4, 8.5];
+  const PUFF_VERT = [
+    'attribute vec4 aA;attribute vec4 aB;',                    // aA = base x, base z, height, amplitude   aB = phase, speed, size, rotation
+    'uniform float uT;uniform vec3 uCam;uniform float uBase;uniform vec2 uWind;uniform float uR;',
+    'varying vec2 vUv;varying vec3 vW;varying float vK;',
     'void main(){',
-    ' vec2 p=vW.xz*0.085+vec2(uSeed*13.0,uSeed*7.0);',
-    ' vec2 wind=vec2(uT*0.030,uT*0.011)*(0.6+uSeed*0.35);',
-    ' float a=fbm(p+wind);float b=fbm(p*1.9-wind*1.4+vec2(5.2,1.3));',
-    ' float m=smoothstep(0.30,0.78,a*0.62+b*0.46);',
-    ' float d=length(vW.xz-uCam.xz);',
-    ' float rad=1.0-smoothstep(12.0,34.0,d);',
-    ' float near=smoothstep(0.8,4.5,d);',
-    ' float al=m*uDens*rad*near*uFade;',
-    ' gl_FragColor=vec4(uCol*(0.85+0.3*m),al);}'
+    ' float ph=aB.x+uT*aB.y;float s=sin(ph);float up=0.5+0.5*s;',                    // up: 0 = lowest, 1 = highest point of the cycle
+    ' vec2 rel=mod(aA.xy+uWind*uT-uCam.xz+uR,2.0*uR)-uR;',                          // wrapped around the player
+    ' vec3 c=vec3(uCam.x+rel.x+sin(ph*0.7+aA.x)*0.9,uBase+aA.z+aA.w*s,uCam.z+rel.y+cos(ph*0.6+aA.y)*0.9);',
+    ' float sz=aB.z*(0.85+0.30*up);',                                                // blooms while rising, shrinks while sinking
+    ' float rr=length(rel)/uR;',
+    ' vK=(1.0-smoothstep(0.50,0.97,rr))*(1.0-0.45*up);',                            // thinner when high, fades at the far ring
+    ' float cr=cos(aB.w+ph*0.05),sr=sin(aB.w+ph*0.05);',
+    ' vec2 q=position.xy;vec2 qr=vec2(q.x*cr-q.y*sr,q.x*sr+q.y*cr);',               // slow in-plane turn (so the cloud shape changes)
+    ' vec3 R=vec3(viewMatrix[0][0],viewMatrix[1][0],viewMatrix[2][0]),U=vec3(viewMatrix[0][1],viewMatrix[1][1],viewMatrix[2][1]);',
+    ' vec3 w=c+(R*q.x+U*q.y)*sz;vW=w;vUv=qr+0.5;',
+    ' gl_Position=projectionMatrix*viewMatrix*vec4(w,1.0);}'
   ].join('\n');
-  function makeMist() {
-    const L = P.layers;
-    for (let i = 0; i < L; i++) {
-      const u = { uT: tU, uCam: { value: new T.Vector3() }, uSeed: { value: i * 1.37 + 0.5 }, uDens: { value: 0.34 / Math.sqrt(L) }       /* r29b: was 0.62 - the bright blue sheets read as a flat veil on the ground */, uFade: { value: 1 },
-                  uCol: { value: new T.Vector3(0.17, 0.21, 0.30) } };
-      const mat = new T.ShaderMaterial({ uniforms: u, vertexShader: MIST_VERT, fragmentShader: MIST_FRAG, transparent: true, depthWrite: false, depthTest: true, fog: false, side: T.DoubleSide });
-      const m = new T.Mesh(new T.PlaneGeometry(80, 80, 1, 1), mat);
-      m.rotation.x = -Math.PI / 2; m.renderOrder = 2; m.frustumCulled = false;
-      m.userData = { u: u, dy: 0.10 + (L > 1 ? i * (1.12 / (L - 1)) : 0.3) };
-      scene.add(m); mist.push(m);
+  const PUFF_FRAG = [
+    'uniform sampler2D uTex;uniform vec3 uCol;uniform vec3 uCam;uniform float uBase;uniform float uDens;uniform float uFade;',
+    'varying vec2 vUv;varying vec3 vW;varying float vK;',
+    'void main(){',
+    ' float t=texture2D(uTex,vUv).a;',
+    ' float g=smoothstep(0.02,0.95,vW.y-uBase);',                                    // fades out towards the ground -> no hard line where it meets the terrain
+    ' float n=smoothstep(1.3,5.5,length(vW-uCam));',                                 // fades near the camera -> no big blob in the face
+    ' float a=t*vK*g*n*uDens*uFade;',
+    ' if(a<0.003)discard;',
+    ' gl_FragColor=vec4(uCol*(0.9+0.25*t),a);}'
+  ].join('\n');
+  function puffTex() {
+    const c = cv(128, 128), x = c.getContext('2d');
+    for (let i = 0; i < 46; i++) {                                    // irregular wispy cloud = many soft blobs
+      const a = Math.random() * 6.283, d = Math.random() * 30, px = 64 + Math.cos(a) * d, py = 64 + Math.sin(a) * d, r = rnd(12, 30);
+      const g = x.createRadialGradient(px, py, 0, px, py, r);
+      g.addColorStop(0, 'rgba(255,255,255,' + rnd(0.10, 0.24) + ')'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = g; x.fillRect(0, 0, 128, 128);
     }
+    x.globalCompositeOperation = 'destination-in';                    // soft round outline, nothing reaches the quad edge
+    const m = x.createRadialGradient(64, 64, 0, 64, 64, 64);
+    m.addColorStop(0, 'rgba(0,0,0,1)'); m.addColorStop(0.55, 'rgba(0,0,0,0.85)'); m.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = m; x.fillRect(0, 0, 128, 128);
+    const t = new T.CanvasTexture(c); t.generateMipmaps = true; t.minFilter = T.LinearMipmapLinearFilter; return t;
+  }
+  function makeMist() {
+    const N = P.puffs, plane = new T.PlaneBufferGeometry(1, 1), g = new T.InstancedBufferGeometry();
+    g.index = plane.index; g.setAttribute('position', plane.attributes.position); g.setAttribute('uv', plane.attributes.uv);
+    const A_ = new Float32Array(N * 4), B_ = new Float32Array(N * 4);
+    for (let i = 0; i < N; i++) {
+      const haze = Math.random() < 0.4;                              // 40 % = low flat-ish ground haze, 60 % = wisps that rise and sink more
+      A_[i * 4] = rnd(0, 2 * PUFF_R); A_[i * 4 + 1] = rnd(0, 2 * PUFF_R);
+      A_[i * 4 + 2] = haze ? rnd(0.35, 0.80) : rnd(0.45, 1.00);       // centre height (m above the floor)
+      A_[i * 4 + 3] = haze ? rnd(0.15, 0.45) : rnd(0.80, 1.70);       // how far it rises / sinks (m)
+      B_[i * 4] = rnd(0, 6.283); B_[i * 4 + 1] = rnd(0.16, 0.38) * (Math.random() < 0.5 ? -1 : 1);   // phase, speed (period ~17-40 s)
+      B_[i * 4 + 2] = haze ? rnd(SIZE[0] + 1.5, SIZE[1] + 1.0) : rnd(SIZE[0], SIZE[1] - 1.5); B_[i * 4 + 3] = rnd(0, 6.283);
+    }
+    g.setAttribute('aA', new T.InstancedBufferAttribute(A_, 4)); g.setAttribute('aB', new T.InstancedBufferAttribute(B_, 4));
+    g.instanceCount = N;
+    const u = { uT: tU, uCam: { value: new T.Vector3() }, uBase: { value: 0 }, uWind: { value: new T.Vector2(0.22, 0.08) }, uR: { value: PUFF_R },
+                uTex: { value: puffTex() }, uCol: { value: new T.Vector3(0.20, 0.25, 0.35) }, uDens: { value: DENS }, uFade: { value: 1 } };
+    const mat = new T.ShaderMaterial({ uniforms: u, vertexShader: PUFF_VERT, fragmentShader: PUFF_FRAG, transparent: true, depthWrite: false, depthTest: true, fog: false, side: T.DoubleSide });
+    const m = new T.Mesh(g, mat); m.frustumCulled = false; m.renderOrder = 2; m.userData = { u: u };
+    scene.add(m); mist.push(m);
   }
 
   /* ---------------------------------------------------------------- API */
@@ -169,11 +206,7 @@
       // mist off indoors (smooth), on outdoors
       A.mistFade += ((indoor ? 0 : 1) - A.mistFade) * Math.min(1, dt * 2.5);
       const base = gy || 0;
-      for (const m of mist) {
-        const u = m.userData.u;
-        m.position.set(cp.x, base + m.userData.dy + Math.sin(t * 0.2 + m.userData.dy * 5) * 0.05, cp.z);
-        u.uCam.value.copy(cp); u.uFade.value = A.mistFade;
-      }
+      for (const m of mist) { const u = m.userData.u; u.uCam.value.copy(cp); u.uBase.value = base; u.uFade.value = A.mistFade; }
     } catch (e) { console.warn('[atmo] update failed, disabled', e); A.ready = false; }
   };
 })();
