@@ -9,3 +9,5 @@ If you use git / GitHub Desktop / drag-and-drop of folders, none of this matters
 r31 PATCH (clinic): THE_LAST_VILLAGE_r31_PATCH_clinic.zip — extract it OVER the r30 part1 folder (it replaces index.html, js/p1-main.js, js/p1-config.js and adds js/p1-clinic.js + assets/props/clinic/*.glb). part2 / part3 are unchanged. The full part1 would be 27 MB (> GitHub's 25 MB limit), hence a patch.
 
 r32 (clinic bigger): THE_LAST_VILLAGE_r32_part1_game_FULL.zip = full part1 with the bigger clinic (assets/models/village.glb edited). part3 (village_hq.glb, ?hq) is NOT patched.
+
+PART 2 (NPCs, dialogue, missions): js/p2-config.js + js/p2-story.js (+ small edits in index.html, js/p1-main.js). See docs/CHANGES_part2.md. No new big files.

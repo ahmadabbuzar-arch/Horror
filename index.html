@@ -47,8 +47,8 @@ body.portrait #rot{display:flex}
 <div id="gq" role="group" aria-label="Graphics"><span class="sm">Graphics:</span> <button data-q="high">High</button><button data-q="medium">Medium</button><button data-q="low">Low</button></div>
 <div class="sm" id="gqh" style="margin:-2px 0 6px;font-size:11px;opacity:.6"></div>
 <button id="go" disabled>▶ Khelo</button>
-<div class="sm">PC: WASD chalo · Mouse dekho · Shift daudo · F torch · H hut · G gaon · E door kholo/band karo<br>Mobile: left side joystick · right side swipe se dekho</div>
-<div class="sm" style="margin-top:10px;opacity:.5">v8 · Phase 1 r3 corrections · Hut: “Horror House Scene” by CGS CREATOR (Sketchfab, CC-BY-4.0)</div>
+<div class="sm">PC: WASD chalo · Mouse dekho · Shift daudo · F torch · H hut · G gaon · E door kholo/band karo · E baat karo/uthao · J missions<br>Mobile: left side joystick · right side swipe se dekho</div>
+<div class="sm" style="margin-top:10px;opacity:.5">v8 · Part 2 (NPC dialogue + missions) · Hut: “Horror House Scene” by CGS CREATOR (Sketchfab, CC-BY-4.0)</div>
 <div class="sm" style="margin-top:6px;opacity:.45;font-size:10px;line-height:1.35">Models (Sketchfab): Mechanic – 00amza · Old Lady – silran666 · Guard – DJMaesen · Dark Psychic Kid – sebasxpm · Man – Mcyborg · Abandoned Sedan – Rashad Ibrahimli (all CC-BY-4.0) · Horror Girl – LostBoyz2078 (CC-BY-NC-4.0, non-commercial) · Doctor – Innerscene Corp (CC0)</div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -64,6 +64,8 @@ body.portrait #rot{display:flex}
 <script src="js/p1-props.js"></script>
 <script src="js/p1-gate.js"></script>
 <script src="js/p1-clinic.js"></script>
+<script src="js/p2-config.js"></script>
+<script src="js/p2-story.js"></script>
 <script src="js/p1-drive.js"></script>
 <script src="js/p1-main.js"></script>
 <script>
@@ -289,6 +291,7 @@ function update(dt){
   const pp=new THREE.Vector3(pos.x,gy+1,pos.z);nearV=vmesh.filter(o=>o.userData.box.containsPoint(pp));
   const ox=pos.x,oz=pos.z;
   let f=(keys.w?1:0)-(keys.s?1:0)-joy.y,s=(keys.d?1:0)-(keys.a?1:0)+joy.x;
+  if(window.P2&&P2.locked){f=0;s=0}   // Part 2: no walking while a dialogue / the mission list is open
   const n=Math.hypot(f,s);if(n>1){f/=n;s/=n}
   const sp=keys.shift?5.6:3.3,sn=Math.sin(yaw),cs=Math.cos(yaw);
   const drv=!!(window.P1&&P1.drive&&P1.drive.active&&P1.car&&P1.car.ready);
