@@ -13,7 +13,7 @@
   const QS = (typeof location !== 'undefined' ? location.search : '');
   const TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
   const NPC_IDS = ['raghunath', 'kamla', 'arvind', 'shyamlal', 'chotu', 'dev'];
-  const SAVE_KEY = 'lv_p2_v1';
+  const SAVE_KEY = 'lv_p2_story_v2';
   const Q = CFG.quests;
 
   /* ------------------------------------------------------------------ state */
@@ -55,19 +55,21 @@
     const q = curQuest(), s = curStage();
     if (!q || !s) return '';
     let t = stripCount(s.obj);
-    if (s.type === 'collect' && s.items.length > 1) t += ' (' + gotCount(s.items) + '/' + s.items.length + ')';
+    if ((s.type === 'collect' || s.type === 'inspect') && s.items.length > 1) t += ' (' + gotCount(s.items) + '/' + s.items.length + ')';
     return t;
   }
+  function scareFlash() { if (!ui || !ui.flash) return; ui.flash.style.opacity = '1'; setTimeout(function () { if (ui && ui.flash) ui.flash.style.opacity = '0'; }, 420); }
   function toast(t) {
     if (!ui) return;
     ui.toast.textContent = t; ui.toast.style.opacity = '1'; toastT = 4.2;
   }
   function completeQuest() {
     const q = curQuest(); if (!q) return;
+    if (window.P1SFX) P1SFX.play('stinger_slow', 0.52);
     const after = q.onDone;
     toast('✔ Mission poora: ' + q.title);
     startQuestDeferred(S.qi + 1);
-    if (after) openDialogue([after], null, null);
+    if (after) openDialogue(Array.isArray(after[0]) ? after : [after], null, null);
   }
   function startQuestDeferred(i) { S.qi = i; S.st = 0; setTimeout(function () { if (i < Q.length) toast('📜 Naya mission: ' + Q[i].title); else toast('🏁 Part 2 ke saare missions poore!'); }, 2600); }
   function completeStage() {
@@ -103,7 +105,7 @@
   function buildUI() {
     css();
     ui = {};
-    ui.box = mk('div', 'p2d'); ui.name = mk('div', 'p2n', ui.box); ui.text = mk('div', 'p2x', ui.box); ui.cont = mk('button', 'p2c', ui.box);
+    ui.flash = mk('div', 'p2flash'); ui.flash.style.cssText = 'position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(0,0,0,.08),rgba(0,0,0,.96));transition:opacity .12s'; ui.box = mk('div', 'p2d'); ui.name = mk('div', 'p2n', ui.box); ui.text = mk('div', 'p2x', ui.box); ui.cont = mk('button', 'p2c', ui.box);
     ui.prompt = mk('button', 'p2i'); ui.track = mk('div', 'p2q'); ui.toast = mk('div', 'p2t'); ui.panel = mk('div', 'p2l');
     ui.cont.textContent = 'Continue ▶' + (TOUCH ? '' : '  (Space)');
     ui.cont.onclick = function (e) { e.stopPropagation(); advance(); };
@@ -167,6 +169,7 @@
     return [defName, String(line)];
   }
   function openDialogue(lines, defName, onEnd, slot) {
+    if (window.P1SFX && lines && lines.length) P1SFX.play('drawer', 0.12);
     if (!ui || !lines || !lines.length) { if (onEnd) onEnd(); return; }
     if (dlg) { dlg.queue = (dlg.queue || []); dlg.queue.push({ lines: lines, defName: defName, onEnd: onEnd, slot: slot }); return; }
     dlg = { lines: lines.map(function (l) { return norm(l, defName == null ? '' : defName); }), i: 0, onEnd: onEnd, slot: slot || null, shown: 0, full: '', done: false, queue: [] };
@@ -287,6 +290,28 @@
     const sm = new T.SpriteMaterial({ map: glowTexture(), color: mi.glow, blending: T.AdditiveBlending, depthWrite: false, transparent: true, fog: false, opacity: 0.5 });
     const sp = new T.Sprite(sm); sp.scale.set(mi.strong ? 1.5 : 1.1, mi.strong ? 1.5 : 1.1, 1); sp.position.y = mi.h + 0.1; g.add(sp);
     world.scene.add(g);
+    // Optional real props from the supplied asset pack. The procedural mesh remains as a safe fallback.
+    if (def.asset && P1.assets && P1.assets.acquire) {
+      P1.assets.acquire(def.asset).then(function (gltf) {
+        if (!items[id] || items[id].group !== g) return;
+        const root = gltf.scene.clone(true);
+        root.traverse(function (o) { if (o.isMesh) { if (o.geometry) o.geometry = o.geometry.clone(); if (o.material) o.material = Array.isArray(o.material) ? o.material.map(function (m) { return m.clone(); }) : o.material.clone(); } });
+        root.updateMatrixWorld(true);
+        const box = new T.Box3().setFromObject(root), size = new T.Vector3(); box.getSize(size);
+        const maxDim = Math.max(size.x, size.y, size.z) || 1;
+        const fit = (def.fit || 0.85) / maxDim;
+        root.scale.setScalar(fit);
+        root.updateMatrixWorld(true);
+        const fitted = new T.Box3().setFromObject(root);
+        root.position.y -= fitted.min.y;
+        // Remove the fallback meshes but keep the interaction glow sprite.
+        const keep = sp;
+        const old = g.children.slice();
+        old.forEach(function (o) { if (o !== keep) { g.remove(o); if (o.geometry) o.geometry.dispose(); if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach(function (m) { if (m && m.dispose) m.dispose(); }); } });
+        g.add(root);
+        root.position.y += 0.025;
+      }).catch(function (e) { if (P1.warn) P1.warn('Optional story prop fallback: ' + def.asset, e); });
+    }
     const reveal = mi.reveal || 0;
     items[id] = { id: id, def: def, x: p.x, z: p.z, y: y, group: g, glow: sp, revealR: reveal, revealed: !reveal, t: Math.random() * 6 };
     g.visible = !reveal;
@@ -300,19 +325,21 @@
   function syncItems() {
     if (!world) return;
     const s = curStage(), want = {};
-    if (s && s.type === 'collect') s.items.forEach(function (i) { if (!S.got[i]) want[i] = 1; });
+    if (s && (s.type === 'collect' || s.type === 'inspect')) s.items.forEach(function (i) { if (!S.got[i]) want[i] = 1; });
     Object.keys(items).forEach(function (i) { if (!want[i]) removeItem(i); });
     Object.keys(want).forEach(spawnItem);
   }
   function pickItem(id) {
     const it = items[id]; if (!it) return;
+    if (window.P1SFX) P1SFX.play('search', 0.42);
     const def = it.def;
+    if (def.scare) scareFlash();
     openDialogue(def.read, def.speaker || '', function () {
       S.got[id] = true;
       if (def.name && S.names.indexOf(def.name) < 0) { S.names.push(def.name); }
       removeItem(id);
       const s = curStage();
-      if (s && s.type === 'collect') {
+      if (s && (s.type === 'collect' || s.type === 'inspect')) {
         if (gotCount(s.items) >= s.items.length) completeStage();
         else { toast('✔ ' + gotCount(s.items) + '/' + s.items.length + ' mil gaye'); save(); refreshUI(); }
       }
@@ -378,6 +405,7 @@
   /* ------------------------------------------------------------------ place checks + frame update */
   function reached(where, pos) {
     const pl = CFG.places[where]; if (!pl) return false;
+    if (where === 'garage') return Math.hypot(pos.x - pl.x, pos.z - pl.z) <= pl.r;
     if (where === 'tower') return Math.hypot(pos.x - pl.x, pos.z - pl.z) <= pl.r && (P1.gy || 0) >= pl.minY;
     if (where === 'graveyard') return Math.abs(pos.x - pl.cx) < pl.half && Math.abs(pos.z - pl.cz) < pl.half;
     return false;
