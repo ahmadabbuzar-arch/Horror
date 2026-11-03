@@ -11,3 +11,11 @@ r31 PATCH (clinic): THE_LAST_VILLAGE_r31_PATCH_clinic.zip — extract it OVER th
 r32 (clinic bigger): THE_LAST_VILLAGE_r32_part1_game_FULL.zip = full part1 with the bigger clinic (assets/models/village.glb edited). part3 (village_hq.glb, ?hq) is NOT patched.
 
 PART 2 (NPCs, dialogue, missions): js/p2-config.js + js/p2-story.js (+ small edits in index.html, js/p1-main.js). See docs/CHANGES_part2.md. No new big files.
+
+r34 STORY PART 1:
+- Five connected investigation-driven missions replace the old fetch-and-return quest chain.
+- Includes dialogue, clue inspection, workshop exploration, watchtower climb and first-half cliffhanger.
+- Uses four optional props from the user-provided Assets for game.zip under assets/props/story/.
+- No voice/audio; selected clue discoveries use a silent visual scare flash.
+- Offline logic/assets checks passed; browser render is still untested.
+See docs/CHANGES_r34_story_part1.md.
