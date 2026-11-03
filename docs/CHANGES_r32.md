@@ -10,3 +10,4 @@ What changed
 Layout check: floor-plan slice at 1.0 m cut from the real mesh data + furniture footprints (SAT overlap test): 0 overlaps, everything inside the room, nothing in the stairs or door lane.
 Tune: scale = K / PX / PZ in the patch (see CHANGES text above); furniture x/z in CFG at the top of js/p1-clinic.js.
 NOT tested in a browser. Not in this zip: `village_hq.glb` (part3, used with ?hq) is NOT patched — the clinic is still the old size there.
+r32b: index.html now loads `assets/models/village.glb?v=r32` (cache-bust: the file name did not change, so browsers / CDN could keep serving the old small clinic house). js/p1-clinic.js checks the clinic house width at start and shows a warning in-game if the old village.glb is still being served.
