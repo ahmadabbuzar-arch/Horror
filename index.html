@@ -182,7 +182,7 @@ function hit(o,d,far,ms){rc.set(o,d);rc.far=far;return rc.intersectObjects(ms,fa
 function loadVillage(done){
   try{
     $('st').textContent='Gaon load ho raha hai…';
-    new THREE.GLTFLoader().load((GQ.id==='high'&&/[?&]hq\b/.test(location.search))?'assets/models/village_hq.glb':'assets/models/village.glb?v=r32',vg=>{try{placeVillage(vg)}catch(e){console.error(e);$('msg').textContent='Village error: '+e.message}done()},undefined,e=>{console.error(e);$('st').textContent='Village load error (assets/models/village.glb)';done()});
+    new THREE.GLTFLoader().load((GQ.id==='high'&&/[?&]hq\b/.test(location.search))?'assets/models/village_hq.glb':'assets/models/village_r32.glb',vg=>{try{placeVillage(vg)}catch(e){console.error(e);$('msg').textContent='Village error: '+e.message}done()},undefined,e=>{console.error(e);$('st').textContent='Village load error (assets/models/village_r32.glb) - part A upload karo';done()});
   }catch(e){console.error(e);done()}
 }
 let villageBox=null; // world-space bounds of the village (used by NPC spawn anchors)
