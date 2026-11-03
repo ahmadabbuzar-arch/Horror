@@ -336,7 +336,7 @@
     try {
       let hs = null; G.traverse(function (o) { if (!hs && o.isMesh && /^Cube\.?146$/.test(o.name || '')) hs = o; });
       if (hs && T.Box3) { const sz = new T.Box3().setFromObject(hs).getSize(new T.Vector3()); P1.status.clinicHouse = sz.x.toFixed(2) + ' x ' + sz.z.toFixed(2) + ' m';
-        if (sz.x < 3.9) { P1.warn('clinic house is the OLD size (' + sz.x.toFixed(2) + ' m) -> village_r32.glb is not the patched one'); if (w.notify) w.notify('⚠ Clinic ghar purana size dikh raha hai — part A (assets/models/village_r32.glb) upload karo + hard refresh'); } }
+        if (sz.x < 3.9) { P1.warn('clinic house is the OLD size (' + sz.x.toFixed(2) + ' m) -> runtime enlarge did not run'); if (w.notify) w.notify('⚠ Clinic ghar purana size dikh raha hai — part A index.html upload karo + hard refresh'); } }
     } catch (e) { P1.warn('clinic size check failed', e); }
 
     // Dr. Arvind stands inside, looking at the door

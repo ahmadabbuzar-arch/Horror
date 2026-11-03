@@ -182,7 +182,7 @@ function hit(o,d,far,ms){rc.set(o,d);rc.far=far;return rc.intersectObjects(ms,fa
 function loadVillage(done){
   // r32d: bigger-clinic village = village_r32.glb. If that file is missing / fails to parse, fall back to the old village.glb so the houses NEVER vanish (the clinic then warns that it is the old size).
   const hq=(GQ.id==='high'&&/[?&]hq\b/.test(location.search));
-  const urls=(hq?['assets/models/village_hq.glb']:[]).concat(['assets/models/village_r32.glb','assets/models/village.glb']);
+  const urls=(hq?['assets/models/village_hq.glb']:[]).concat(['assets/models/village.glb']);
   let k=0;
   function next(){
     if(k>=urls.length){$('st').textContent='Village load error: '+urls.join(' / ')+' - part A upload karo';done();return}
@@ -197,6 +197,22 @@ let villageBox=null; // world-space bounds of the village (used by NPC spawn anc
 function placeVillage(vg){
   const S=vg.scene;
   S.traverse(o=>{if(o.isMesh)(Array.isArray(o.material)?o.material:[o.material]).forEach(m=>{m.side=THREE.DoubleSide;if(m.transparent){m.transparent=false;m.alphaTest=0.35}})});
+  // r32e: CLINIC HOUSE 1.3x BIGGER IN PLAN (x,z; height unchanged), done here at load time so NO new model file has to be uploaded (the big-file upload kept failing).
+  // Same maths as the tools/patch in docs/CHANGES_r32.md: p' = pivot + K*(p - pivot) on x and z for the 14 nodes of the veranda house. Skipped if the house is already big (patched GLB).
+  try{
+    const CL={k:1.3,px:-4.967672285,pz:6.425,re:/^Cube\.?(137|138|139|140|141|142|143|144|145|146|147|114|115|202)$/};
+    const hit=n=>CL.re.test(n||'');
+    const parts=S.children.filter(c=>hit(c.name)||(c.children||[]).some(ch=>hit(ch.name)));
+    const house=parts.find(c=>/^Cube\.?146$/.test(c.name))||parts[0];
+    S.updateMatrixWorld(true);
+    const hw=house?new THREE.Box3().setFromObject(house).getSize(new THREE.Vector3()).x:0;
+    if(parts.length>=12&&hw>0&&hw<3.9){
+      const M=new THREE.Matrix4().makeTranslation(CL.px,0,CL.pz).multiply(new THREE.Matrix4().makeScale(CL.k,1,CL.k)).multiply(new THREE.Matrix4().makeTranslation(-CL.px,0,-CL.pz));
+      parts.forEach(c=>{c.updateMatrix();new THREE.Matrix4().multiplyMatrices(M,c.matrix).decompose(c.position,c.quaternion,c.scale);c.updateMatrix()});
+      S.updateMatrixWorld(true);window.__clinicScaled=parts.length;
+      console.log('[clinic] house enlarged x'+CL.k+' ('+parts.length+' parts, width '+hw.toFixed(2)+' -> '+new THREE.Box3().setFromObject(house).getSize(new THREE.Vector3()).x.toFixed(2)+' m)');
+    }else console.log('[clinic] enlarge skipped: parts='+parts.length+' width='+hw.toFixed(2));
+  }catch(e){console.error('[clinic] enlarge failed',e)}
   const g=new THREE.Group(),b0=new THREE.Box3().setFromObject(S);g.add(S);
   g.position.set(cc.x+8-(b0.min.x+b0.max.x)/2,0.05,cc.z+24-b0.min.z);   // r11: +5 cm so porch/house floors (top at exactly y=0) no longer z-fight with the ground plane
   scene.add(g);g.updateMatrixWorld(true);window.__villageG=g;   // r31: the clinic module hangs its sign / props / lights on this group
