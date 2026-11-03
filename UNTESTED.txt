@@ -1,5 +1,14 @@
-*** r21 BUILD — graphics High/Medium/Low (r18), old graveyard removed (r20), NEW small cemetery with closed fence (r21); NOT tested in a browser ***
-No Three.js / network in the build sandbox. Verified offline: JS syntax, node tools/test_p1_logic.js (33), node tools/test_hut_ground.js (13),
-python3 tools/check_assets.py, and offline preview renders in screenshots/ (own renderer, NOT the game).
-Details + remaining issues: docs/CORRECTION_REPORT_r3.md
-URL switches: ?debug ?dev ?spawns ?gallery ?carlights
+THE LAST VILLAGE r35 — IMPORTANT TEST STATUS
+
+Offline checks passed:
+- New JS files pass node --check.
+- Existing P2 story logic: 54 passed, 0 failed.
+- Asset validation: all checks passed.
+- Quest configuration references validate.
+
+Not tested in a real browser or Android device:
+- Full end-to-end playthrough.
+- Actual 3D positions of new quest objects and SAAYA encounter points.
+- Touch controls, frame rate, and final ending flow.
+
+Known scope limits: car driving is reused rather than a full repair simulation; SAAYA has encounter-point relocations and scare flashes, not full pathfinding AI; endings use text epilogues rather than cinematic cutscenes.

@@ -65,9 +65,13 @@ body.portrait #rot{display:flex}
 <script src="js/p1-gate.js"></script>
 <script src="js/p1-clinic.js"></script>
 <script src="js/p2-config.js"></script>
+<script src="js/p3-config.js"></script>
 <script src="js/p2-story.js"></script>
+<script src="js/p3-complete.js"></script>
+<script src="js/cutscenes_r37.js"></script>
 <script src="js/p1-drive.js"></script>
 <script src="js/p1-main.js"></script>
+<script src="js/p1-audio.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const touch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
@@ -275,7 +279,7 @@ function step(dx,dz){
   pos.x+=dx;pos.z+=dz;
 }
 function goVillage(){const d=doors[0];if(!d)return;pos.set(d.x+2.2,0,d.z);gy=0;yaw=Math.PI/2;pitch=0}
-function toggleDoor(){if(nearDoor){nearDoor.t=nearDoor.t?0:1;showDoor(true)}}
+function toggleDoor(){if(nearDoor){nearDoor.t=nearDoor.t?0:1;if(window.P1SFX)P1SFX.play('door',0.48);showDoor(true)}}
 function showDoor(force){
   let nd=null,bd=3.6;for(const d of doors){const q=Math.hypot(pos.x-d.x,pos.z-d.z);if(q<bd){bd=q;nd=d}}
   if(nd!==nearDoor||force){nearDoor=nd;const b=$('dr');b.style.display=nd?'block':'none';if(nd){const k=touch?'':' (E)';b.textContent=(nd.label?(nd.t?nd.label[1]:nd.label[0]):nd.isCar?(nd.t?'🚗 Car door band karo':'🚗 Car door kholo'):(nd.t?'🚪 Door band karo':'🚪 Door kholo'))+k}}
@@ -326,13 +330,15 @@ function update(dt){
   if(drv)P1.drive.camPos(cam);
   lamp.intensity=1.2+Math.sin(performance.now()*0.011)*0.25+Math.random()*0.25;
   if(window.P1&&P1.update)P1.update(dt,pos);
+  if(window.LV_CUTSCENE)LV_CUTSCENE.update(dt);
+  if(window.P1SFX&&P1SFX.update)P1SFX.update(dt,Math.hypot(pos.x-ox,pos.z-oz),!!keys.shift,drv);
 }
 let last=performance.now();
 (function loop(t){requestAnimationFrame(loop);if(!ready)return;const dt=Math.min(0.05,(t-last)/1000);last=t;if(started)update(dt);if(window.ATMO)ATMO.update(dt,t/1000,cam,gy,nearV.length>0);renderer.render(scene,cam)})(0);
 
 function goHut(){if(!cabinMeshes.length)return;pos.set(cc.x,0,cc.z);gy=0;$('msg').textContent='Hut ke andar ho. Bahar nikalne ke liye darwaza dhoondo 🚪';setTimeout(()=>$('msg').textContent='',5000)}
 let wallsOn=false;function toggleWalls(){wallsOn=!wallsOn;$('bw').textContent=wallsOn?'🧱 Hut deewar: ON':'👻 Hut deewar: OFF'}
-function toggleTorch(){torch.visible=!torch.visible}
+function toggleTorch(){torch.visible=!torch.visible;if(window.P1SFX)P1SFX.play(torch.visible?'flash_on':'flash_off',0.42)}
 $('dr').onclick=toggleDoor;$('bv').onclick=goVillage;$('bh').onclick=goHut;$('bl').onclick=toggleTorch;$('bw').onclick=toggleWalls;
 addEventListener('keydown',e=>{const k=e.key.toLowerCase();if(k==='shift')keys.shift=true;else keys[k]=true;if(k==='f')toggleTorch();if(k==='h')goHut();if(k==='g')goVillage();if(k==='e')toggleDoor()});
 addEventListener('keyup',e=>{const k=e.key.toLowerCase();if(k==='shift')keys.shift=false;else keys[k]=false});
@@ -366,10 +372,12 @@ function chkPortrait(){document.body.classList.toggle('portrait',touch&&innerHei
 addEventListener('resize',chkPortrait);addEventListener('orientationchange',chkPortrait);chkPortrait();
 document.addEventListener('fullscreenchange',()=>{if(touch&&started&&!document.fullscreenElement){started=false;$('go').textContent='▶ Wapas khelo (fullscreen)';$('ov').style.display='flex'}});
 $('go').onclick=()=>{
+  if(window.P1SFX)P1SFX.unlock();
   if(touch)goFull();
   $('ov').style.display='none';started=true;$('hud').style.display='flex';$('cross').style.display='block';
   if(touch){$('pad').style.display='block';$('look').style.display='block'}
   else{try{$('c').requestPointerLock()}catch(e){}}
+  if(window.LV_CUTSCENE&&window.P1)LV_CUTSCENE.start({cam:cam,pos:pos,yaw:yaw,pitch:pitch,P1:P1});
 };
 // r18 graphics selector: choosing a different level saves it and reloads the page (MSAA and texture sizes can only change at load time)
 (function(){

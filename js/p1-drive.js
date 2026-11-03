@@ -74,7 +74,8 @@
       D.pending = true; setDoor(1);                            // door closed -> open it first, then get in
       if (w.notify) w.notify('🚪 Door khul raha hai…');
       setTimeout(function () { try { sitDown(w); } catch (e) { D.pending = false; console.error('[P1] sitDown', e); } }, CFG.doorMs);
-    } else {
+     } else {
+      if (window.P1SFX) P1SFX.play('car_close',0.55);
       D.active = false; D.v = 0; engine(false, 0);
       const s = Math.sin(D.h), c = Math.cos(D.h);
       setDoor(1);                                              // open the driver door, step out on the driver side (+X in car space)
