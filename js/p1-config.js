@@ -139,8 +139,7 @@
     ],
     // abandoned cars on the road (same sedan file as the player's car, separate ?query = separate instance so car crumple edits are not shared)
     wrecks: [
-      { id: 'wreck1', url: 'assets/vehicles/sedan.glb?wreck1', x: 4.0, z: 22, yaw: 78,  lengthM: 4.6, tilt: [0, 3], tint: 0.55, circles: [{ x: 0, z: -1.3, r: 0.95 }, { x: 0, z: 0, r: 0.95 }, { x: 0, z: 1.3, r: 0.95 }], footprint: 3 },
-      { id: 'wreck2', url: 'assets/vehicles/sedan.glb?wreck2', x: 5.6, z: 63,  yaw: 165, lengthM: 4.6, tilt: [2, -4], tint: 0.5,  circles: [{ x: 0, z: -1.3, r: 0.95 }, { x: 0, z: 0, r: 0.95 }, { x: 0, z: 1.3, r: 0.95 }], footprint: 3 }
+      // r33: both abandoned road cars (wreck1 at x 4 / z 22, wreck2 at x 5.6 / z 63) removed on request - only the player's car near the hut remains
     ],
     // extra forest: clones of the hut model's own trees around the village so it sits in woods, not on an empty plain
     forest: {

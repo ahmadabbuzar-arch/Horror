@@ -6,7 +6,7 @@ const T={Raycaster:class{set(){}intersectObjects(){return []}},Vector3:V3,Box3:c
 const w={THREE:T,console,location:{search:''},document:{}};w.window=w;w.P1={cfg:{car:{}},log(){},warn(){},info:{},status:{},assets:{}};
 vm.createContext(w);vm.runInContext(fs.readFileSync('js/p1-config.js','utf8'),w);vm.runInContext(fs.readFileSync('js/p1-props.js','utf8'),w);
 const P1=w.P1,C=P1.config.village;
-ok(C.props.length===3&&C.wrecks.length===2,'3 props (tower, windmill, graveyard) + 2 wrecks configured');
+ok(C.props.length===3&&C.wrecks.length===0,'3 props (tower, windmill, graveyard), no road wrecks (r33)');
 {const g=C.props.find(c=>c.id==='graveyard');
 ok(g&&!C.props.some(c=>/^gy_(graves|fence)$/.test(c.id)),'r29: old cemetery (graves + fence) is gone, replaced by ONE graveyard map');
 ok(g.origin&&g.scale===1&&g.climb&&g.floorRe==='gy_terrain'&&g.walls&&g.wallRe==='gy_tombs','r29: file is in metres, origin kept, terrain = floor, tombs = walls (tree canopy never ray-tested)');
