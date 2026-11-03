@@ -1,4 +1,4 @@
-# THE LAST VILLAGE — Phase 1 r3 (final corrections)  ·  UNTESTED IN A BROWSER
+# THE LAST VILLAGE — Complete Story Build (r36 audio integration)
 
 See docs/CORRECTION_REPORT_r3.md (what changed, what was and was NOT verified) and screenshots/ (offline asset previews, not in-game).
 URL switches now: ?debug / ?dev also show the developer buttons (Gaon, Hut ke andar, Hut deewar).
@@ -48,3 +48,12 @@ The leather-jacket model is not used.
 ## Re-generating assets
     python3 tools/optimize_doctor.py <original doctor .glb (in the previous Phase 1 ZIP: source_models/)> assets/characters/dr_arvind.glb
     python3 tools/optimize_glb.py <in.glb> <out.glb> [--base 1024] [--other 512] [--drop nodeName,...]
+
+See `docs/CHANGES_r34_story_part1.md` for the story changes and verification limits.
+
+## r35 — Complete story layer
+The r35 build adds the second-half story chain, evidence notebook, SAAYA encounter director and four ending choices. See `docs/CHANGES_r35_complete_game.md`. This is a playable-story implementation pass, not a fully cinematic release build: browser/Android playtesting is still required, and the SAAYA system is encounter-based rather than full navigation AI.
+
+
+## Audio (r36)
+`js/p1-audio.js` loads the selected horror SFX from `assets/audio/horror/` after the first user interaction. See `docs/AUDIO_INTEGRATION_r36.md` for sound mapping and verification details.

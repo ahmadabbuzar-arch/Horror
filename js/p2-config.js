@@ -27,13 +27,14 @@
     typeSpeed: 38,          // characters per second (typing effect)
     save: true,             // keep progress in localStorage (the graphics selector reloads the page!)  ?newgame resets
     places: {
-      tower:     { x: 13,  z: 67, r: 6.5, minY: 5.5 },     // top deck of the watchtower (stairs lift the player: P1.gy > minY) within r metres
+      tower:     { x: 13,  z: 67, r: 6.5, minY: 5.5 },
+      garage:    { x: 18.4, z: 31.2, r: 7.0 },     // top deck of the watchtower (stairs lift the player: P1.gy > minY) within r metres
       graveyard: { cx: -26, cz: 38, half: 11.2 }            // inside the iron fence (same as p1-gate.js CFG)
     },
 
     /* ---------------------------------------------------------------------------------- ITEMS (spawned only while their stage is active) */
     items: {
-      toolbox: { x: 18.4, z: 31.2, snap: true, model: 'toolbox', verb: '🧰 Toolbox uthao', speaker: 'Tum',
+      toolbox: { x: 18.4, z: 31.2, snap: true, model: 'toolbox', asset: 'assets/props/story/toolbox.glb', verb: '🧰 Toolbox uthao', speaker: 'Tum',
         read: [['', 'Zang lagi hui lohe ki peti. Dhakkan par chaak se likha hai: "R. — Raghunath Garage".'], ['Tum', 'Yehi hai! Kisi ne ise windmill ke paas phenk diya tha… par kyun?']] },
 
       letter1: { x: 7.6, z: 24.0, snap: true, model: 'letter', verb: '✉️ Chitthi uthao', speaker: 'Chitthi 1',
@@ -49,8 +50,23 @@
       lantern: { x: -6.0, z: 52.4, snap: true, model: 'lantern', verb: '🏮 Laalten uthao', speaker: 'Tum',
         read: [['', 'Purani peetal ki laalten. Andar ek chhoti si lau ab bhi kaanp rahi hai — jabki hawa band hai.'], ['Tum', 'Ye khud jal rahi hai? …Shyamlal ko dikhana padega. Phir tower par chadhna hai.']] },
 
-      drawing: { x: 0.3, z: 43.6, snap: true, model: 'drawing', verb: '📓 Drawing book uthao', speaker: 'Tum',
+      drawing: { x: 0.3, z: 43.6, snap: true, model: 'drawing', asset: 'assets/props/story/sketchbook.glb', verb: '📓 Drawing book uthao', speaker: 'Tum',
         read: [['', 'School ke aangan mein ek mod diya hua drawing book. Mom, Dad, ghar, ped… aur ek akeli kabr jiske upar ek bachcha khada hai.'], ['Tum', 'Chotu ne ye kabr kab dekhi? Neeche ek naam likha hai: "Gopal".']], name: 'Gopal' },
+
+      tracks: { x: 20.8, z: 29.8, snap: true, model: 'stone', verb: '👣 Nishaan investigate karo', speaker: 'Tum',
+        read: [['', 'Mitti mein do tarah ke tyre marks hain. Ek tumhari car ke jaise… doosre bahut purani gaadi ke.'], ['Tum', 'Purani gaadi workshop se yahan tak aayi thi. Accident se pehle koi mera intezaar kar raha tha?']] },
+      torn_note: { x: 16.1, z: 34.0, snap: true, model: 'letter', asset: 'assets/props/story/rusty_key.glb', verb: '🗝️ Zang lagi chaabi examine karo', speaker: 'Tum',
+        read: [['', 'Chaabi ke saath kapde ka jala hua tukda bandha hai. Is par tumhare bachpan ke naam ka pehla akshar likha hai.'], ['Tum', 'Ye chaabi kis ghar ki hai? Raghunath iske baare mein kuch jaanta hoga.']], scare: true },
+      clinic_key: { near: 'clinic', dx: 2.0, dz: 1.5, snap: true, model: 'letter', asset: 'assets/props/story/rusty_key.glb', verb: '🗝️ Drawer ki chaabi dekho', speaker: 'Tum',
+        read: [['', 'Desk ke neeche purani chaabi mili. Us par clinic ka nishaan hai.'], ['Tum', 'Doctor ne drawer kyun lock kiya hua tha?']], scare: true },
+      family_photo: { near: 'clinic', dx: -1.0, dz: -1.8, snap: true, model: 'drawing', verb: '🖼️ Tasveer examine karo', speaker: 'Tum',
+        read: [['', 'Purani family photograph. Ek bachcha camera ki taraf peeth karke khada hai. Tasveer ke peeche tareekh 18 saal purani hai.'], ['Tum', 'Ye ghar… mujhe sapne mein dikh chuka hai.'], ['Tum', 'Tasveer ke peeche mera bachpan ka naam likha hai.']], scare: true },
+      bell_clue: { x: 14.5, z: 66.0, snap: true, model: 'lantern', verb: '🔔 Ghanti ke nishaan dekho', speaker: 'Tum',
+        read: [['', 'Ghanti ke neeche deewar par paanch kharoche hue nishaan hain. Har nishaan ke saath ek naam ka pehla akshar.'], ['Tum', 'Ye ghanti kisi ko bulane ke liye bajayi jaati thi… ya kisi ko rokne ke liye?']] },
+      school_bag: { x: 2.2, z: 42.0, snap: true, model: 'drawing', asset: 'assets/props/story/school_bag.glb', verb: '🎒 School bag check karo', speaker: 'Tum',
+        read: [['', 'Bag ke andar purani class photo aur ek aadha jala admission card hai.'], ['Tum', 'Admission card par wahi bachpan ka naam hai jo clinic ki tasveer ke peeche likha tha.']] },
+      child_drawing: { x: -1.6, z: 45.2, snap: true, model: 'drawing', asset: 'assets/props/story/sketchbook.glb', verb: '🖍️ Drawing ko dhyan se dekho', speaker: 'Tum',
+        read: [['', 'Drawing mein ek bachcha gaon ke gate ke paas khada hai. Uske peeche ek lamba saaya hai.'], ['Tum', 'Ye bachcha… main hoon?'], ['', 'Door kahin se lakdi ke darwaze par teen baar dastak hoti hai.']], scare: true },
 
       // The Forgotten Grave (positions: graveyard map centre + offset; chosen in free gaps between the tombs, see tools/ notes in docs/CHANGES_part2.md)
       hidden_grave: { near: 'graveyard', dx: -5.0, dz: -5.0, snap: false, model: 'grave', verb: '🪦 Chhupi hui kabr dekho', speaker: 'Tum',
@@ -75,90 +91,90 @@
 
     /* ---------------------------------------------------------------------------------- QUESTS */
     quests: [
-      { id: 'q_raghunath', npc: 'raghunath', title: 'Raghunath — Gayab Toolbox', short: 'Toolbox dhoondo',
-        locked: ['Abhi busy hoon.'],
-        done: ['Teri wajah se meri aadhi zindagi wapas mili. Kamla Devi ka haal pooch lena, wo kal se kuch dhoondh rahi hai.', 'Aur sun… raat mein akele mat ghoomna. Yahan "koi" hamesha dekhta rehta hai.'],
+      { id: 'q_raghunath', npc: 'raghunath', title: 'The Return — Workshop ka Raaz', short: 'Workshop ke clues investigate karo',
+        locked: ['Pehle gaon mein thoda ghoom lo. Mujhe tumhara chehra jaana-pehchana lagta hai…'],
+        done: ['Ab mujhe yaad aa gaya… tum us raat gaon mein the. Lekin maine tumhe yahan dekha hi nahi tha. Kamla se milo. Uske paas purane khat hain.'],
         stages: [
-          { type: 'talk', npc: 'raghunath', obj: 'Raghunath se baat karo',
-            lines: ['Arre! Tum naye ho gaon mein? Is waqt raat ko, is sadak par?', 'Meri garage ka toolbox gayab ho gaya hai. Subah tak yahin tha, ab nahi hai. Bina auzaar ke main kuch bhi theek nahi kar sakta.', 'Mujhe lagta hai kisi ne windmill ki taraf phenk diya. Wahan jaake dekh lo — meharbani hogi.'] },
-          { type: 'collect', obj: 'Windmill ke paas Raghunath ka toolbox dhoondo', items: ['toolbox'],
-            remind: ['Toolbox abhi nahi mila? Windmill ke paas, east ki taraf kheton mein dekho.'] },
-          { type: 'talk', npc: 'raghunath', obj: 'Toolbox Raghunath ko lauta do',
-            lines: ['Yehi hai! Mere auzaar… Tumne kamaal kar diya.', 'Waise ek baat — ye toolbox kisi ne bahut jaldi mein phenka tha. Jaise koi kuch chhupa raha ho.', 'Kamla Devi ke paas jao. Uski chitthiyan bhi gayab hain, mujhe lagta hai dono baatein judi hain.'] }
+          { type: 'talk', npc: 'raghunath', obj: 'Raghunath se workshop ke baare mein poochho', lines: [
+            ['Raghunath','Ruko… tumhara chehra. Nahi, mumkin nahi. Tum itne saal baad…'],
+            ['Tum','Aap mujhe jaante hain?'],
+            ['Raghunath','Maine aisa kab kaha? Meri workshop mein raat ko koi ghusa tha. Toolbox gayab hai, aur zameen par ajeeb nishaan hain. Agar sach mein madad karni hai, workshop khud dekh lo.'],
+            ['Raghunath','Aur haan… jo bhi mile, pehle dhyan se dekhna. Har cheez uthana zaroori nahi.'] ] },
+          { type: 'inspect', obj: 'Workshop mein teen clues investigate karo (0/3)', items: ['toolbox','tracks','torn_note'], remind: ['Workshop ke aas-paas dekho. Toolbox ke alawa mitti aur purane kapde ka tukda bhi kuch batayega.'] },
+          { type: 'reach', obj: 'Workshop ke andar wapas jaakar nishaan milao', where: 'garage' },
+          { type: 'talk', npc: 'raghunath', obj: 'Raghunath se clues ke baare mein sawaal karo', lines: [
+            ['Tum','Yahan purani gaadi ke tyre marks hain. Aur ye chaabi… is par mere naam ka pehla akshar hai.'],
+            ['Raghunath','Ye chaabi tumhare purane ghar ki hai. Us raat ke baad us ghar ko band kar diya gaya tha.'],
+            ['Tum','Kaunsi raat?'],
+            ['Raghunath','Kamla se milo. Uske paas woh khat hain jo kisi ko nahi padhne chahiye the.'] ] }
         ] },
 
-      { id: 'q_kamla', npc: 'kamla', title: 'Kamla Devi — Gayab Chitthiyan', short: 'Teen chitthiyan dhoondo',
-        locked: ['Beta, abhi mat aao… pehle Raghunath ki madad kar do. Wo bhi pareshaan hai.'],
-        done: ['Ab mujhe sab yaad aa raha hai. Wo kabr bhooli nahi gayi… sirf chhupa di gayi hai.', 'Dr. Arvind ke register mein bhi wahi naam honge. Unse milo.'],
+      { id: 'q_kamla', npc: 'kamla', title: 'The Missing Letters — Chhupi Hui Sachchai', short: 'Purane khat padho aur unka raaz samjho',
+        locked: ['Beta, abhi nahi. Raghunath se jo baat karni thi, pehle woh poori karo.'],
+        done: ['Maine tumhe bachpan mein dekha tha. Tumhari maa tumhe lekar bhaagi thi. Dr. Arvind ke paas us raat ka medical record hai.'],
         stages: [
-          { type: 'talk', npc: 'kamla', obj: 'Kamla Devi se baat karo',
-            lines: ['Raghunath ne bheja hai tumhe? Achha… Beta, meri teen chitthiyan kisi ne chura li hain.', 'Unmein mere pati ke baare mein sab likha tha. Hawa ke saath udd gayi hongi, ya kisi ne… udwayi hongi.', 'Ek sadak ke kinaare, ek school ki taraf, aur ek qabristan ki baad ke paas… wahi teen jagah yaad hain. Dhoondh lo, bhagwan tumhara bhala kare.'] },
-          { type: 'collect', obj: 'Kamla Devi ki chitthiyan dhoondo', items: ['letter1', 'letter2', 'letter3'],
-            remind: ['Teen chitthiyan hain, beta. Ek sadak ke kinaare, ek school ki taraf, ek qabristan ki baad ke paas.'] },
-          { type: 'talk', npc: 'kamla', obj: 'Chitthiyan Kamla Devi ko do',
-            lines: ['Haan… ye meri hi likhawat hai. Hari Prasad… Savitri…', 'Ye log kabhi maare nahi gaye the, beta. Bas… bhula diye gaye. Gaon ne unke naam register se kaat diye.', 'Dr. Arvind ke paas wo register hoga. Jaao, unse poochho. Par jaldi karna.'] }
+          { type: 'talk', npc: 'kamla', obj: 'Kamla se purane khaton ke baare mein poochho', lines: [
+            ['Kamla Devi','Tum wapas aa gaye… mujhe laga tha tum kabhi nahi lautoge.'],
+            ['Tum','Aap mujhe pehchanti hain?'],
+            ['Kamla Devi','Main tumhari maa ko jaanti thi. Usne mujhe kuch khat diye the. Koi unhe dhoondh raha hai. Teen khat gaon mein chhupaye gaye hain. Unhe padho, lekin unmein likhe naam zor se mat lena.'] ] },
+          { type: 'inspect', obj: 'Teen purane khat padhkar unke naam note karo (0/3)', items: ['letter1','letter2','letter3'], remind: ['Khat alag-alag jagah chhupaye gaye hain. Har khat mein ek naam aur ek jagah ka zikr hai.'] },
+          { type: 'talk', npc: 'kamla', obj: 'Khaton mein mile naam Kamla ko batao', lines: [
+            ['Tum','Hari Prasad, Savitri… aur ek aisi kabr jiska naam kisi record mein nahi.'],
+            ['Kamla Devi','Woh log mare nahi the… unhe gaon ki yaadon se mita diya gaya. Us raat bachchon ko clinic le jaya gaya tha. Dr. Arvind se milo. Usne tumhara ilaaj kiya tha.'],
+            ['Tum','Mera?'],
+            ['Kamla Devi','Haan. Tumhe yaad nahi hoga.'] ] }
         ] },
 
-      { id: 'q_arvind', npc: 'arvind', title: 'Dr. Arvind — Gayab Medical Register', short: 'Medical register dhoondo',
-        locked: ['Clinic band hai… Kal aana. Kamla ka kaam khatam hone do.'],
-        done: ['Register wapas aa gaya. Ab saaf hai — ye gaon beemaari se nahi, kisi aur cheez se mara tha.', 'Shyamlal watchtower ke paas rehta hai. Usne bhi kuch dekha hai, aur uski laalten kho gayi hai. Usse milo.'],
+      { id: 'q_arvind', npc: 'arvind', title: 'The Medical Record — Woh Bachcha Kaun Tha?', short: 'Clinic ke records aur locked drawer investigate karo',
+        locked: ['Clinic mein abhi kaam chal raha hai. Kamla se baat karke aao.'],
+        done: ['Maine tumhe bachaya nahi tha… maine sirf tumhe gaon se bahar bhejne mein madad ki thi. Shyamlal ne us raat tower se sab dekha.'],
         stages: [
-          { type: 'talk', npc: 'arvind', obj: 'Dr. Arvind se baat karo',
-            lines: ['Kaun? Oh… tum. Darwaza khula hi tha.', 'Mera medical register gayab hai. Wahi, jismein purane marizon ke naam darj the. Ek raat mein mere desk se uthaya gaya.', 'Mujhe lagta hai kisi ne use clinic ke peeche, west deewar ki taraf phenk diya hai. Plis, dhoondo — wo register sirf kagaz nahi, saboot hai.'] },
-          { type: 'collect', obj: 'Clinic ke peeche Dr. Arvind ka medical register dhoondo', items: ['register'],
-            remind: ['Clinic ke west deewar ke bahar dekho, jahaan jhaadiyaan hain.'] },
-          { type: 'talk', npc: 'arvind', obj: 'Register Dr. Arvind ko do',
-            lines: ['Haan! Yahi hai… ye kaale nishaan kisi ne jaanbujhkar lagaye hain.', 'Baldev, Munna, Lakshmi… main inhe jaanta tha. Maine unka ilaaj kiya tha. Phir ek din sab ke naam gaayab ho gaye.', 'Shyamlal ko dhoondo. Wo watchtower par raat ko pehra deta hai. Uski laalten kho gayi hai — usse madad chahiye.'] }
+          { type: 'talk', npc: 'arvind', obj: 'Dr. Arvind se apne bachpan ke baare mein poochho', lines: [
+            ['Dr. Arvind','Kamla ne tumhe bheja hai? Mujhe umeed thi ye din kabhi nahi aayega.'],
+            ['Tum','Mere bachpan ka record dikhaiye.'],
+            ['Dr. Arvind','Record mein kuch panne badle gaye hain. Main tumhe saboot dikha sakta hoon, lekin pehle clinic ke andar jo chhupaya gaya hai use dhoondho. Desk ka drawer band hai.'] ] },
+          { type: 'inspect', obj: 'Clinic ke andar register, chaabi aur family photo investigate karo (0/3)', items: ['register','clinic_key','family_photo'], remind: ['Register ke saath desk aur deewar ke paas ki cheezein bhi check karo.'] },
+          { type: 'talk', npc: 'arvind', obj: 'Dr. Arvind se family photo ka matlab poochho', lines: [
+            ['Tum','Is photo mein jo bachcha hai… kya woh main hoon?'],
+            ['Dr. Arvind','Haan. Us raat tumhari maa tumhe lekar clinic aayi thi. Tum baar-baar ek hi naam bol rahe the — Gopal.'],
+            ['Tum','Gopal kaun tha?'],
+            ['Dr. Arvind','Shyamlal ko dhoondho. Usne tower se us raat ki ghanti bajte dekhi thi.'] ] }
         ] },
 
-      { id: 'q_shyamlal', npc: 'shyamlal', title: 'Shyamlal — Laalten aur Watchtower', short: 'Laalten dhoondo, tower par chadho',
-        locked: ['Raat ka pehra hai. Doctor se milke aao, tab baat karenge.'],
-        done: ['Tumne wo sab dekha jo main roz dekhta hoon. Ab maano — qabristan mein kuch hai.', 'Chotu school ke aas-paas rehta hai. Wo kuch banata rehta hai… uski drawing book ke baare mein poochho.'],
+      { id: 'q_shyamlal', npc: 'shyamlal', title: 'The Watchtower — Aakhri Ghanti', short: 'Laalten lekar tower par chadho aur ghanti ke nishaan dekho',
+        locked: ['Doctor ne bheja hai? Pehle uska kaam poora karo.'],
+        done: ['Ghanti paanch baar baji thi. Har baar ek naam mita diya gaya. Aakhri naam… tumhara tha. Chotu se milo. Usne wahi cheez drawing mein dekhi hai.'],
         stages: [
-          { type: 'talk', npc: 'shyamlal', obj: 'Shyamlal se baat karo',
-            lines: ['Ruko! Aage mat badho… Oh, tum ho. Dr. Arvind ne bheja hoga.', 'Meri laalten kho gayi hai. Bina uske raat ko tower par chadhna maut ko bulaane jaisa hai. Wo aakhri baar school ke peeche wale raaste par thi.', 'Laalten dhoondo. Phir tower par chadho — wahan se poora gaon dikhta hai, aur wo roshni bhi.'] },
-          { type: 'collect', obj: 'Shyamlal ki laalten dhoondo (school ke peeche, west taraf)', items: ['lantern'],
-            remind: ['Laalten school ke peeche, west tree line ke paas hogi.'] },
-          { type: 'reach', obj: 'Watchtower ke upar (top deck) tak chadho', where: 'tower',
-            remind: ['Tower ki seedhiyan chadho. Upar se hi dikhega.'] },
-          { type: 'talk', npc: 'shyamlal', obj: 'Neeche aakar Shyamlal se baat karo',
-            lines: ['Dekha? Wo roshni qabristan ki taraf se aati hai… Roz raat ko, theek barah baje.', 'Maine kai baar jaake dekhna chaha, par har baar kuch peeche se mera naam leta hai.', 'Chotu ki drawing book mein bhi kabr dikhti hai. Wo school ke aas-paas khel raha hoga. Usse dhoondo.'] }
+          { type: 'talk', npc: 'shyamlal', obj: 'Shyamlal se us raat ki ghanti ke baare mein poochho', lines: [
+            ['Shyamlal','Tumhe tower tak aana hi tha. Us raat main yahin tha. Ghanti apne aap baji thi.'],
+            ['Tum','Kisne bajayi?'],
+            ['Shyamlal','Pata nahi. Laalten lo, seedhiyan chadho aur ghanti ke neeche bane nishaan dekho. Shayad tumhe samajh aaye.'] ] },
+          { type: 'inspect', obj: 'Purani laalten aur ghanti ke nishaan investigate karo (0/2)', items: ['lantern','bell_clue'], remind: ['Laalten ke bina andhera hoga. Tower ke top deck par ghanti ke paas nishaan dekho.'] },
+          { type: 'reach', obj: 'Watchtower ke top deck par jao', where: 'tower' },
+          { type: 'talk', npc: 'shyamlal', obj: 'Shyamlal se paanch nishaanon ka matlab poochho', lines: [
+            ['Tum','Deewar par paanch nishaan hain. Ek naam ke liye ek nishaan.'],
+            ['Shyamlal','Paanch log… aur ek bachcha. Tum us raat wahan the. Main tumhe gate ke paas dekha tha.'],
+            ['Tum','Mujhe kuch yaad kyun nahi?'],
+            ['Shyamlal','Chotu ki drawings dekho. Shayad tumhara dimaag woh yaad wapas la sake.'] ] }
         ] },
 
-      { id: 'q_chotu', npc: 'chotu', title: 'Chotu — School ki Drawing Book', short: 'Drawing book dhoondo',
-        locked: ['Mujhe akela rehne do… mummy ne kaha tha ajnabiyon se baat mat karna.'],
-        done: ['Main wahan nahi jaata. Par tum ja sakte ho. Kabr ke paas khade hone par "wo" tumhe dekhegi.', 'Meri drawing mein jo kabr hai… wahi hai.'],
+      { id: 'q_chotu', npc: 'chotu', title: 'The Child in the Drawing — Pehchaan', short: 'School ke clues se apne bachpan ka raaz jaano',
+        locked: ['Mujhe darr lag raha hai. Pehle Shyamlal se baat kar lo.'],
+        done: ['Maine tumhe drawing mein dekha tha. Tum wapas aa gaye… par woh bhi tumhare peeche aa gayi.'],
         stages: [
-          { type: 'talk', npc: 'chotu', obj: 'Chotu se baat karo',
-            lines: ['…Kaun ho aap? Aap bhoot to nahi ho na?', 'Meri drawing book school mein gir gayi. Usmein mainne wo sab banaya jo raat ko dikhta hai. Mujhe darr lagta hai wapas jaane mein.', 'School ke aangan mein dekho… jahaan peeli diwaar hai. Please le aao.'] },
-          { type: 'collect', obj: 'School ke aangan mein Chotu ki drawing book dhoondo', items: ['drawing'],
-            remind: ['Drawing book school ke aangan mein hai. Please jaldi…'] },
-          { type: 'talk', npc: 'chotu', obj: 'Drawing book Chotu ko lauta do',
-            lines: ['Meri book! Shukriya aapka!', 'Isme ek kabr hai jise koi nahi dekhta. Mainne use sapne mein dekha tha — qabristan ke andar, do bade pattharon ke beech.', 'Wahan sirf un logon ko ek naam sunayi deta hai jo… bhule hue ko yaad karte hain.'] }
-        ] },
-
-      { id: 'q_graveyard', npc: null, title: 'The Forgotten Grave', short: 'Chhupi kabr aur bhule hue naam',
-        stages: [
-          { type: 'reach', obj: 'Qabristan ke andar jao (east gate: darwaza kholo)', where: 'graveyard' },
-          { type: 'collect', obj: 'Do bade tombon ke beech chhupi kabr dhoondo', items: ['hidden_grave'] },
-          { type: 'collect', obj: 'Kabr ke aas-paas ke patthar padho — bhule hue naam (0/3)', items: ['name_stone1', 'name_stone2', 'name_stone3'] }
+          { type: 'talk', npc: 'chotu', obj: 'Chotu se uski drawings ke baare mein poochho', lines: [
+            ['Chotu','Aap wahi ho na jo mere sapne mein aate ho?'],
+            ['Tum','Tumne mujhe pehle dekha hai?'],
+            ['Chotu','Nahi… par meri drawing mein aap ho. School mein mera bag aur drawing book chhoot gaye. Wahan jao. Lekin agar koi tumhara naam le, mudna mat.'] ] },
+          { type: 'inspect', obj: 'School mein drawing book aur bag investigate karo (0/3)', items: ['drawing','school_bag','child_drawing'], remind: ['School ke aangan ko dhyan se dekho. Drawing book ke saath bag aur doosri drawing bhi hai.'] },
+          { type: 'talk', npc: 'chotu', obj: 'Chotu ko drawing mein bane bachche ke baare mein poochho', lines: [
+            ['Tum','Drawing mein jo bachcha hai… woh main hoon?'],
+            ['Chotu','Haan. Aur aapke peeche jo khada hai, woh har drawing mein alag jagah aa jaata hai.'],
+            ['Tum','SAAYA…'],
+            ['Chotu','Usne mujhe bhi dekha tha. Usne kaha tha ki aapko sab yaad dilana hai.'] ] }
         ],
-        onDone: ['', 'Sab naam mil gaye: Hari Prasad, Savitri, Baldev, Munna, Lakshmi, Gopal. Qabristan mein ab kuch bhi shaant nahi raha…'] },
-
-      { id: 'q_dev', npc: 'dev', title: 'Dev — Gayab Gaonwala aur Diary', short: 'Mohan aur diary ke panne',
-        locked: ['Abhi nahi. Pehle ye sab khatam karo — tumne jo kabr dekhi hai, uske baare mein baad mein.'],
-        done: ['Mohan ke saath jo hua, wahi Gopal ke saath hua tha. Aur ab wo rukegi nahi.', 'Main nahi jaanta tumhein kitna bata doon. Agle raat ka intezaar karo… jo hone wala hai uske liye taiyaar rehna.'],
-        stages: [
-          { type: 'talk', npc: 'dev', obj: 'Dev se baat karo',
-            lines: ['Tumne qabristan dekh liya, hai na? Mujhe tumhari aankhon mein dikh raha hai.', 'Mera dost Mohan teen din pehle jungle ki taraf gaya tha. Wapas nahi aaya. Uski diary ke panne hawa mein udd gaye — gaon mein idhar-udhar bikhre honge.', 'Teen panne dhoondo. Phir jungle ke kinaare uska last-seen spot dekho. Mujhe sach jaanna hai.'] },
-          { type: 'collect', obj: 'Mohan ki diary ke 3 panne dhoondo (0/3)', items: ['diary1', 'diary2', 'diary3'],
-            remind: ['Teen panne hain. Ek mere ghar ke paas, ek tower ki taraf, ek shuruaati raaste par.'] },
-          { type: 'collect', obj: 'Jungle ke kinaare gayab Mohan ka last-seen spot dekho', items: ['mohan_coat'],
-            remind: ['Diary kehti hai wo jungle ke west kinaare gaya tha. Wahin dekho.'] },
-          { type: 'talk', npc: 'dev', obj: 'Dev ko sab bata do',
-            lines: ['Coat… Mohan ka. Aur jala hua kagaz? Ye wahi nishaan hai jo Hari Prasad ke register mein tha.', 'To ye sab ek hi chain hai. Wo har us ko le jaati hai jo qabristan ka raaz jaan jaata hai.', 'Bas. Ab aur nahi — kal ka din aane do. Jo aage hoga, uske liye taiyaar rehna.'] }
-        ],
-        onDone: ['', 'Part 2 ke saare missions poore hue. Kahani abhi khatam nahi hui…'] }
+        onDone: [['', 'Drawing ke peeche ek purani tareekh likhi hai — wahi raat, 18 saal pehle.'], ['Tum','Main us raat gaon mein tha. Meri maa mujhe lekar bhaagi thi. Aur SAAYA mujhe tab se jaanti hai.'], ['','Door gaon ke gate par ek parchai khadi hai. Woh hilti nahi… bas tumhari taraf dekh rahi hai.'], ['Tum','Ab mujhe apne purane ghar jaana hoga.']]
+      }
     ],
 
     /* generic lines (fallbacks / chatter) */
