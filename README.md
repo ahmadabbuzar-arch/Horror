@@ -27,10 +27,11 @@ Any static server works (`npx serve`, nginx, GitHub Pages ...). Needs internet f
     js/p1-core.js              config, asset manager (dedupe / sequential / refcounted dispose), blob shadow, measuring
     js/p1-characters.js        7 characters: orientation, height normalisation, materials, idle, distance streaming
     js/p1-car.js               sedan: scale, ground, damage, door/hood/trunk pivots, door-button hookup, colliders
-    js/p1-main.js              guarded glue (a Phase 1 error can never break the original gameplay)\n    js/p1-clinic-audio.js      existing B3 clinic sign/interior dressing + optional ambient audio
+    js/p1-clinic.js            r31: Dr. Arvind Clinic (sign letters, lights, hospital props)
+    js/p1-main.js              guarded glue (a Phase 1 error can never break the original gameplay)
     assets/models/             hut.glb, village.glb      (extracted byte-for-byte from the original base64)
     assets/characters/         raghunath, kamla_devi, dr_arvind, shyamlal, chotu, dev, saaya  (.glb, mobile-optimised)
-    assets/vehicles/sedan.glb\n    assets/audio/              optional wind.mp3, crickets.mp3, wood_creaks.mp3 (see README.txt)
+    assets/vehicles/sedan.glb
     tools/                     extract_base64.py, optimize_glb.py, optimize_doctor.py (Pillow only),
                                check_assets.py, test_p1_logic.js, verify_car_geometry.py  (offline verification, see below)
     docs/                      PHASE1_REPORT.md, MODEL_INSPECTION.md, CREDITS.md

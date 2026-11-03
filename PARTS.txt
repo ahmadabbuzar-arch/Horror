@@ -5,3 +5,5 @@ Extract ALL parts into the SAME folder (they merge; folder names are identical):
   part3_hq_optional : assets/models/village_hq.glb (open the game with ?hq at the end of the URL)
 If you used the OLD part2, delete assets/props/banchory.glb, graveyard_entrance.glb, graveyard_wall.glb, graveyard.glb, cluny.glb (not used any more).
 If you use git / GitHub Desktop / drag-and-drop of folders, none of this matters: every single file is below 15 MB.
+
+r31 PATCH (clinic): THE_LAST_VILLAGE_r31_PATCH_clinic.zip — extract it OVER the r30 part1 folder (it replaces index.html, js/p1-main.js, js/p1-config.js and adds js/p1-clinic.js + assets/props/clinic/*.glb). part2 / part3 are unchanged. The full part1 would be 27 MB (> GitHub's 25 MB limit), hence a patch.

@@ -1,0 +1,45 @@
+ABANDONED HOSPITAL - FREE GAME ASSET LICENSE v1.0
+Published 18 October 2026
+Licensor: Jericowalang
+Copyright (c) 2026 Jericowalang, to the extent rights subsist and are held by the licensor.
+
+1. Permission
+You may use, copy, modify and incorporate the supplied models, textures, animations,
+Godot scenes and scripts into personal or commercial games and interactive projects,
+worldwide, without royalties. You may sell your finished games and use renders or
+recordings of the assets to promote those projects. There is no per-project,
+per-seat, revenue or engine limit.
+
+2. Credit
+Public credit is optional. If you wish to give credit, use:
+"Abandoned Hospital assets by Jericowalang."
+
+3. Redistribution
+You may share source assets with collaborators. Free redistribution of the original
+or modified assets is permitted if this license and provenance notice accompany
+the source files and you do not misrepresent authorship.
+Do not sell, rent, paywall or otherwise charge for the raw or modified assets as a
+standalone asset pack, stock library, template whose primary value is these assets,
+or a substantially equivalent bundle. Including them in a paid finished game is allowed.
+A free mirror may not put the download behind payment. The licensor may distribute
+their own work separately under other terms.
+
+4. Ownership and scope
+This license does not transfer ownership. Do not claim that you created the
+original pack. You retain rights in your own original contributions.
+This is a custom license, not CC0, MIT or Creative Commons.
+Permission covers only rights the licensor holds. It does not grant third-party
+copyright, trademark, publicity or patent rights, or rights in software used to
+create or run the files. The pack's AI-assisted provenance is disclosed separately.
+
+5. No warranty
+The assets are supplied "as is", without warranties of fitness, merchantability
+or non-infringement. To the extent permitted by law, the licensor is not liable
+for claims or damages arising from their use. Mandatory legal rights remain intact.
+
+6. Compliance
+The permissions are conditional on these terms. If you breach them, stop the
+non-compliant use and contact the licensor through their itch.io profile to resolve it.
+
+Keep this file with redistributed source assets. You do not need to display this
+license in your game's interface or publicly credit the pack.

@@ -14,13 +14,13 @@
     P1.world = world;
     if (!world.spawn) world.spawn = { x: world.pos.x, z: world.pos.z };
     if (!world.notify) world.notify = function () {};
+    guard(function () { P1.startClinic(world); }, 'clinic start');   // r31: BEFORE the characters (it moves Dr. Arvind into the clinic)
     guard(function () { const bad = P1.startCharacters(world); if (bad && bad.length) world.notify('⚠ P1 config: ' + bad.length + ' problem(s) — console dekho'); }, 'characters start');
     guard(function () { P1.loadCar(world); }, 'car start');
     guard(function () { P1.startProps(world); }, 'props start');
-    guard(function () { P1.startClinicAudio(world); }, 'clinic/audio start');
     guard(function () { P1.startGate(world); }, 'gate start');   // r30: graveyard fence + openable gate
     P1.log('started (' + P1.VERSION + ')' + (P1.cfg.gallery ? ' [gallery]' : '') + (P1.cfg.debug ? ' [debug]' : ''));
   };
-  P1.update = function (dt, pos) { guard(function () { P1.updateCharacters(dt, pos); P1.debugTick(dt); }, 'update'); guard(function () { P1.updateProps(dt, pos); }, 'props update'); guard(function () { P1.updateGate(dt, pos); }, 'gate update'); guard(function () { P1.driveUI(pos); }, 'drive ui'); };
-  P1.collide = function (pos) { guard(function () { P1.collideCharacters(pos); P1.collideCar(pos); }, 'collide'); guard(function () { P1.collideProps(pos); }, 'props collide'); guard(function () { P1.collideGate(pos); }, 'gate collide'); };
+  P1.update = function (dt, pos) { guard(function () { P1.updateCharacters(dt, pos); P1.debugTick(dt); }, 'update'); guard(function () { P1.updateProps(dt, pos); }, 'props update'); guard(function () { P1.updateGate(dt, pos); }, 'gate update'); guard(function () { P1.updateClinic(dt, pos); }, 'clinic update'); guard(function () { P1.driveUI(pos); }, 'drive ui'); };
+  P1.collide = function (pos) { guard(function () { P1.collideCharacters(pos); P1.collideCar(pos); }, 'collide'); guard(function () { P1.collideProps(pos); }, 'props collide'); guard(function () { P1.collideGate(pos); }, 'gate collide'); guard(function () { P1.collideClinic(pos); }, 'clinic collide'); };
 })();

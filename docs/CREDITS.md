@@ -28,3 +28,7 @@
 ## r29 — graveyard map (assets/props/graveyard_map.glb)
 "GRAVEYARD (HIGH QUALITY)" by lorem Models (https://sketchfab.com/Afthab333) — https://sketchfab.com/3d-models/graveyard-high-quality-269657010acc4f0ebcf71fcf50fd454f — licence CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/).
 Modified: node transforms baked, converted to metres, terrain levelled to the game ground, tree + textures reduced for mobile (tools/prep_graveyard.py).
+
+## r31 clinic props
+"Abandoned Hospital" asset pack by Jericowalang (free game asset licence v1.0: personal + commercial use allowed) — see assets/props/clinic/LICENSE_abandoned_hospital.txt.
+Doctor's stethoscope model: supplied by the project owner (assets/props/clinic/stethoscope.glb).
