@@ -28,10 +28,10 @@ eval(fs.readFileSync('js/p1-clinic.js', 'utf8'));
 
 let ok = 0, bad = 0; const t = (n, c) => { if (c) ok++; else { bad++; console.log('FAIL', n); } };
 const G = new Obj(); G.position.set(-0.17, 0.05, 16.9);
-const door = { x: -0.17 - 4.3, z: 16.9 + 4.9 }, farDoor = { x: 5, z: 40 };
+const door = { x: -0.17 - 4.10, z: 16.9 + 4.445 }, farDoor = { x: 5, z: 40 };
 P1.startClinic({ scene: new Obj(), village: () => G, doors: [farDoor, door] });
 t('door relabelled', Array.isArray(door.label) && !farDoor.label);
-t('arvind rehomed (world = local + G)', Math.abs(P1.config.npcs.arvind.x - (-0.17 - 5.55)) < 1e-6 && Math.abs(P1.config.npcs.arvind.z - (16.9 + 5.75)) < 1e-6 && P1.config.npcs.arvind.snap === false);
+t('arvind rehomed (world = local + G)', Math.abs(P1.config.npcs.arvind.x - (-0.17 - 6.2)) < 1e-6 && Math.abs(P1.config.npcs.arvind.z - (16.9 + 5.5)) < 1e-6 && P1.config.npcs.arvind.snap === false);
 const sg = P1.clinic.sign();
 t('sign has 15 letters + cross', sg.letters.length === 16);
 t('sign + point lights added to village group', G.children.length >= 3);

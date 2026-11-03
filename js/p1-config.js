@@ -32,7 +32,7 @@
     // r31: B2 (the veranda house) is now DR. ARVIND CLINIC -> Kamla moved to B3's front (where Arvind used to stand)
     kamla:     { place: 'village house (B3)',     anchor: 'world', x:  -0.6, z: 32.6, face: { to: 'spawn' }, snap: true },
     // r31: Arvind stands INSIDE the clinic (B2). js/p1-clinic.js overwrites this entry with exact coordinates from the village group; the numbers below are only a fallback (approx. clinic floor).
-    arvind:    { place: 'Dr. Arvind Clinic (B2, inside)', anchor: 'world', x: -5.7, z: 22.6, face: { yaw: 90 }, snap: false },
+    arvind:    { place: 'Dr. Arvind Clinic (B2, inside)', anchor: 'world', x: -6.35, z: 22.35, face: { yaw: 90 }, snap: false },
     chotu:     { place: 'abandoned school (B4)',  anchor: 'world', x:   2.6, z: 40.0, face: { to: 'spawn' }, snap: true },
     shyamlal:  { place: 'watchtower (B5)',        anchor: 'world', x:   3.7, z: 57.0, face: { to: 'spawn' }, snap: true },
     dev:       { place: 'hidden house (behind B2/B3)', anchor: 'world', x: -10.3, z: 28.4, face: { yaw: 90 }, snap: true },

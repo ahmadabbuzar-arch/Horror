@@ -6,6 +6,7 @@
  *   3. HOSPITAL PROPS inside (assets/props/clinic/*.glb from the Abandoned Hospital pack): desk + chair, exam bed, surgical lamp, trolley with instruments,
  *      medicine cabinet, filing cabinet, sink, clock, visitor chair, bin ... (streamed: loaded when the player is within loadRadius, freed beyond unloadRadius).
  *   4. DR. ARVIND is moved inside the clinic (P1.config.npcs.arvind) and faces the door. Kamla Devi (who used to stand in front of this house) is in p1-config.js.
+ * r32: the clinic house was made 1.3x bigger IN PLAN (x and z; height unchanged) by editing its 14 nodes in assets/models/village.glb (see docs/CHANGES_r32.md); every position below is the r31 one moved into the bigger room.
  * Everything is attached to the village group (village-local coordinates, metres) so it can never drift from the house.
  * Village-local -> world:  world.x = local.x + G.position.x,  world.z = local.z + G.position.z,  floor y = 0 (local).
  * NOT tested in a browser (no Three.js in the build sandbox) — all tunables are in CFG.  Wrapped by p1-main's guard. */
@@ -14,20 +15,20 @@
   const P1 = window.P1, T = THREE, DEG = Math.PI / 180;
 
   /* ===================================================================================================
-   * CFG — village-local metres.  House (village.glb): interior x -7.53..-4.35, z 4.12..8.73, ceiling 1.89 (LOW: nothing taller than 1.85),
-   * road side = +X (east wall at x = -4.3, door at z 4.5..5.3, lower window z 7.2..8.0), stairs along the west wall (x < -6.7, z 4.2..6.35) -> keep that corner free.
+   * CFG — village-local metres.  House (village.glb, r32 = 1.3x bigger in plan): interior x -8.30..-4.165, z 3.43..9.42 (4.1 x 6.0 m, was 3.2 x 4.6), ceiling 1.89 (LOW: nothing taller than 1.85),
+   * road side = +X (east wall at x = -4.1, door at z 3.93..4.96, lower window z 7.43..8.46), stairs along the west wall (x < -7.2, z 3.35..6.35) -> keep that corner free.
    * Item frame: x,z = footprint centre, y = height above floor, yaw in degrees (0 = front faces +Z, 90 = front faces +X (road), 180 = faces -Z, 270 = faces -X).
    * kids = small props placed in the PARENT's own frame (x/z = along its width/depth, y = height above the floor).
    * ================================================================================================= */
   const CFG = {
     loadRadius: 45, unloadRadius: 75, animRadius: 70,
-    door: { x: -4.3, z: 4.9 },                 // clinic door (village-local) — Dr. Arvind looks at it
-    doctor: { x: -5.55, z: 5.75 },             // where Dr. Arvind stands
+    door: { x: -4.10, z: 4.445 },              // clinic door (village-local) — Dr. Arvind looks at it   (r32: house is 1.3x bigger in plan)
+    doctor: { x: -6.2, z: 5.5 },               // where Dr. Arvind stands
     playerR: 0.30,                             // body radius for the furniture collision
 
     sign: {
-      x: -2.98, y: 2.34, z: 6.42,              // centre of the board (stands on the veranda roof, roof top = 2.0)
-      w: 3.6, h: 0.62, text: 'DR. ARVIND CLINIC',
+      x: -2.32, y: 2.34, z: 6.425,             // centre of the board (stands on the veranda roof, roof top = 2.0; r32: roof front edge is now x = -2.11)
+      w: 4.3, h: 0.74, text: 'DR. ARVIND CLINIC',
       // one code per visible letter (spaces skipped) in order  D R . A R V I N D | C L I N I C
       //   o = steady lit     f = flicker (lop-jhup: stable, then a burst of stutters, sometimes a short blackout)     w = weak / nearly dead (mostly dark, blinks now and then)
       modes: ['o', 'f', 'o', 'o', 'o', 'f', 'o', 'w', 'o', 'o', 'f', 'o', 'o', 'w', 'o'],
@@ -35,31 +36,31 @@
       color: 0x8dffd2,                         // sickly green-white neon
       lightColor: 0x6dffb8, lightI: 1.0, lightDist: 8
     },
-    room: { color: 0xc9ecdc, intensity: 1.15, dist: 5.8, x: -5.95, y: 1.62, z: 6.9 },   // interior light (follows the main tube)
+    room: { color: 0xc9ecdc, intensity: 1.15, dist: 7.0, x: -6.23, y: 1.62, z: 7.0 },   // interior light (follows the main tube)
 
     items: [
       // ---- doctor's corner (west wall, north) ----
-      { id: 'desk', url: 'assets/props/clinic/office_desk.glb', x: -7.13, z: 7.35, yaw: 90, col: 0.02, kids: [
+      { id: 'desk', url: 'assets/props/clinic/office_desk.glb', x: -7.90, z: 8.06, yaw: 90, col: 0.02, kids: [
         { url: 'assets/props/clinic/telephone.glb', x: 0.42, y: 0.79, z: 0.02, yaw: -25 },
         { url: 'assets/props/clinic/clipboard.glb', x: -0.12, y: 0.79, z: 0.10, yaw: 12 },
         { url: 'assets/props/clinic/medical_folder.glb', x: -0.50, y: 0.79, z: -0.06, yaw: -8 },
         { url: 'assets/props/clinic/stethoscope.glb', x: 0.12, y: 0.79, z: -0.14, yaw: 70, fit: 0.30 },
         { url: 'assets/props/clinic/medicine_bottle.glb', x: 0.63, y: 0.79, z: 0.18, yaw: 0 }
       ] },
-      { id: 'chair', url: 'assets/props/clinic/swivel_chair.glb', x: -6.35, z: 7.42, yaw: 250, col: 0.06 },
+      { id: 'chair', url: 'assets/props/clinic/swivel_chair.glb', x: -7.04, z: 8.13, yaw: 250, col: 0.06 },
       // ---- north wall (west -> east) ----
-      { id: 'medcab', url: 'assets/props/clinic/medicine_cabinet.glb', x: -7.15, z: 8.49, yaw: 180, col: 0.02 },
-      { id: 'filing', url: 'assets/props/clinic/filing_cabinet.glb', x: -6.50, z: 8.40, yaw: 180, col: 0.02, kids: [
+      { id: 'medcab', url: 'assets/props/clinic/medicine_cabinet.glb', x: -7.92, z: 9.18, yaw: 180, col: 0.02 },
+      { id: 'filing', url: 'assets/props/clinic/filing_cabinet.glb', x: -7.27, z: 9.09, yaw: 180, col: 0.02, kids: [
         { url: 'assets/props/clinic/first_aid_box.glb', x: -0.04, y: 1.32, z: 0.0, yaw: 14 },
         { url: 'assets/props/clinic/bandage_roll.glb', x: 0.14, y: 1.32, z: -0.08, yaw: 40 }
       ] },
-      { id: 'sink', url: 'assets/props/clinic/wall_sink.glb', x: -5.85, z: 8.45, yaw: 180, col: 0.02 },
-      { id: 'clock', url: 'assets/props/clinic/wall_clock.glb', x: -5.10, y: 1.20, z: 8.71, yaw: 180, scale: 0.6 },
-      { id: 'bin', url: 'assets/props/clinic/trash_bin.glb', x: -4.62, z: 8.50, yaw: 180, col: 0.03 },
+      { id: 'sink', url: 'assets/props/clinic/wall_sink.glb', x: -6.62, z: 9.15, yaw: 180, col: 0.02 },
+      { id: 'clock', url: 'assets/props/clinic/wall_clock.glb', x: -5.50, y: 1.20, z: 9.40, yaw: 180, scale: 0.6 },
+      { id: 'bin', url: 'assets/props/clinic/trash_bin.glb', x: -4.44, z: 9.19, yaw: 180, col: 0.03 },
       // ---- treatment area (east side, under the window) ----
-      { id: 'bed', url: 'assets/props/clinic/exam_bed.glb', x: -4.78, z: 7.20, yaw: 0, col: 0.02 },
-      { id: 'lamp', url: 'assets/props/clinic/surgical_lamp.glb', x: -5.58, z: 7.58, yaw: 0, scale: 0.88, col: 0.10 },
-      { id: 'trolley', url: 'assets/props/clinic/surgical_trolley.glb', x: -5.70, z: 6.60, yaw: 90, col: 0.02, kids: [
+      { id: 'bed', url: 'assets/props/clinic/exam_bed.glb', x: -4.60, z: 7.55, yaw: 0, col: 0.02 },
+      { id: 'lamp', url: 'assets/props/clinic/surgical_lamp.glb', x: -5.40, z: 7.93, yaw: 0, scale: 0.88, col: 0.10 },
+      { id: 'trolley', url: 'assets/props/clinic/surgical_trolley.glb', x: -5.52, z: 6.95, yaw: 90, col: 0.02, kids: [
         { url: 'assets/props/clinic/instrument_tray.glb', x: 0.0, y: 0.98, z: 0.0, yaw: 0 },
         { url: 'assets/props/clinic/kidney_dish.glb', x: -0.14, y: 1.04, z: 0.0, yaw: 90 },
         { url: 'assets/props/clinic/scalpel.glb', x: 0.08, y: 1.04, z: 0.04, yaw: 30 },
@@ -67,10 +68,10 @@
         { url: 'assets/props/clinic/syringe.glb', x: -0.02, y: 1.04, z: -0.09, yaw: 80 }
       ] },
       // ---- waiting chair next to the door ----
-      { id: 'vchair', url: 'assets/props/clinic/visitor_chair.glb', x: -4.65, z: 5.85, yaw: 270, col: 0.04 },
+      { id: 'vchair', url: 'assets/props/clinic/visitor_chair.glb', x: -4.47, z: 5.55, yaw: 270, col: 0.04 },
       // ---- ceiling tubes: 'tube' = main (flickers), 'dead' = broken one hanging crooked ----
-      { id: 'tube', url: 'assets/props/clinic/fluorescent_light.glb', x: -5.95, y: 1.89, z: 6.9, yaw: 0, own: 'tube' },
-      { id: 'tube2', url: 'assets/props/clinic/fluorescent_light.glb', x: -5.95, y: 1.89, z: 5.35, yaw: 0, roll: 11, own: 'dead' }
+      { id: 'tube', url: 'assets/props/clinic/fluorescent_light.glb', x: -6.23, y: 1.89, z: 7.1, yaw: 0, own: 'tube' },
+      { id: 'tube2', url: 'assets/props/clinic/fluorescent_light.glb', x: -6.23, y: 1.89, z: 5.25, yaw: 0, roll: 11, own: 'dead' }
     ]
   };
 
@@ -166,7 +167,7 @@
     const fr = new T.MeshStandardMaterial({ color: 0x14110e, roughness: 1, metalness: 0 });
     box(S.w + 0.1, 0.06, 0.1, fr, 0, S.h / 2 + 0.01, 0.01, holder); box(S.w + 0.1, 0.06, 0.1, fr, 0, -S.h / 2 - 0.01, 0.01, holder);
     box(0.06, S.h + 0.1, 0.1, fr, -S.w / 2 - 0.01, 0, 0.01, holder); box(0.06, S.h + 0.1, 0.1, fr, S.w / 2 + 0.01, 0, 0.01, holder);
-    [-1.45, 0, 1.45].forEach(function (bx) {                                      // back braces down to the veranda roof
+    [-0.4 * S.w, 0, 0.4 * S.w].forEach(function (bx) {                                      // back braces down to the veranda roof
       const br = box(0.05, 0.46, 0.05, fr, bx, -S.h / 2 - 0.12, -0.17, holder); br.rotation.x = -0.62;
     });
 
@@ -329,7 +330,7 @@
     if (!G) { P1.warn('clinic: village group not found -> clinic skipped'); P1.status.clinic = 'error: village group not found'; return; }
     G.updateMatrixWorld(true);
     WX = G.position.x; WZ = G.position.z;
-    CX = WX - 5.95; CZ = WZ + 6.4;
+    CX = WX - 6.23; CZ = WZ + 6.425;
     buildSign(); buildRoomLight();
 
     // Dr. Arvind stands inside, looking at the door
